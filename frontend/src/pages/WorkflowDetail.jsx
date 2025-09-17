@@ -294,7 +294,7 @@ export default function WorkflowDetail() {
     // Dynamic tabs based on workflow state
     const getAllTabs = () => {
         const baseTabs = [
-            { id: 'details', label: 'جزئیات', icon: FileText, isAvailable: true }
+            { id: 'details', label: 'جزئیات',isLocked: false ,icon: FileText, isAvailable: true }
         ];
 
         // Form tabs - show based on progression
@@ -318,9 +318,9 @@ export default function WorkflowDetail() {
 
         // Always available tabs
         baseTabs.push(
-            { id: 'attachments', label: 'پیوست‌ها', icon: Paperclip, isAvailable: true },
-            { id: 'workflow', label: 'گردش کار', icon: Clock, isAvailable: true },
-            { id: 'comments', label: 'نظرات', icon: MessageSquare, isAvailable: true }
+            { id: 'attachments', label: 'پیوست‌ها',isLocked: false, icon: Paperclip, isAvailable: true },
+            { id: 'workflow', label: 'گردش کار', isLocked: false,icon: Clock, isAvailable: true },
+            { id: 'comments', label: 'نظرات', isLocked: false,icon: MessageSquare, isAvailable: true }
         );
 
         return baseTabs;

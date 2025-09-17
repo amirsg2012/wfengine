@@ -287,6 +287,7 @@ body {
     mask-composite: exclude ;
     opacity: 0 ;
     transition: opacity 250ms ease ;
+    pointer-events: none ;
 }
 
 .card-modern:hover {
