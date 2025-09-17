@@ -27,17 +27,25 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle token expiration
+// Response interceptor - simplified
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
+    (response) => response,
     (error) => {
+        // Only clear tokens for 401 on non-auth endpoints
         if (error.response?.status === 401) {
-            // Token expired or invalid
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            window.location.href = '/login';
+            const isAuthEndpoint = error.config.url?.includes('/auth/');
+            const isLoginPage = window.location.pathname === '/login';
+            
+            // Don't clear tokens during login or for the auth endpoint itself
+            if (!isAuthEndpoint && !isLoginPage) {
+                console.log('401 error - clearing tokens');
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                // Use React Router navigation instead of window.location
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
+            }
         }
         return Promise.reject(error);
     }

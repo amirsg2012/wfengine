@@ -32,6 +32,8 @@ const queryClient = new QueryClient({
 function AppContent() {
     const { token, loading } = useAuth();
 
+    console.log('AppContent render - token:', token, 'loading:', loading);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">

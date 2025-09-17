@@ -1,5 +1,5 @@
 // src/pages/Login.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, User, Eye, EyeOff, Loader2, BarChart2, FileText, Settings } from 'lucide-react';
 import useAuth from '../api/useAuth';
@@ -88,8 +88,14 @@ export default function Login() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
+    const { login, token } = useAuth();
+    
     const nav = useNavigate();
+    useEffect(() => {
+    if (token) {
+        nav('/inbox', { replace: true });
+    }
+}, [token, nav]);
 
     async function handle(e) {
         e.preventDefault();
@@ -101,7 +107,8 @@ export default function Login() {
             // Simulate network delay for better UX
             await new Promise(resolve => setTimeout(resolve, 1000));
             await login(username, password);
-            nav('/inbox');
+            console.log('Login response received');
+            // nav('/inbox');
         } catch (err) {
             setError(err?.message || 'نام کاربری یا رمز عبور اشتباه است.');
         } finally {
