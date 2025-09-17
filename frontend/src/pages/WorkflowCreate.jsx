@@ -60,7 +60,31 @@ export default function WorkflowCreate() {
     const [busy, setBusy] = useState(false);
     const [toast, setToast] = useState({ message: '', type: '' });
 
-    // ... keep all your existing validation functions ...
+const validateForm = () => {
+    const newErrors = {};
+
+    // 1. Validate Title
+    if (formData.title.trim().length < 5) {
+        newErrors.title = 'عنوان درخواست باید حداقل ۵ کاراکتر باشد';
+    }
+
+    // 2. Validate Applicant Name
+    if (formData.applicant_name.trim().length < 2) {
+        newErrors.applicant_name = 'نام و نام خانوادگی نمی‌تواند خالی باشد';
+    }
+
+    // 3. Validate National ID
+    if (formData.applicant_national_id.trim().length !== 10) {
+        newErrors.applicant_national_id = 'کد ملی باید دقیقاً ۱۰ رقم باشد';
+    }
+
+    // Update the errors state to show messages in the UI
+    setErrors(newErrors);
+    
+
+    // Return true if the newErrors object is empty (form is valid)
+    return Object.keys(newErrors).length === 0;
+};
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -71,7 +95,6 @@ export default function WorkflowCreate() {
         }
     };
 
-    // ... keep your existing validation functions ...
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -80,6 +103,7 @@ export default function WorkflowCreate() {
             setToast({ message: 'لطفاً خطاهای فرم را برطرف کنید', type: 'error' });
             return;
         }
+        console.log("shod")
 
         setBusy(true);
         try {
@@ -172,6 +196,7 @@ export default function WorkflowCreate() {
                     error={errors.title}
                     helper={`${formData.title.length}/300 کاراکتر`}
                 >
+                    <div className="relative">
                     <input
                         type="text"
                         value={formData.title}
@@ -182,6 +207,7 @@ export default function WorkflowCreate() {
                         disabled={busy}
                         autoComplete="off"
                     />
+                    </div>
                 </FormField>
 
                 {/* Applicant Information */}
@@ -246,6 +272,7 @@ export default function WorkflowCreate() {
                     label="توضیحات اولیه"
                     helper="توضیحات اضافی در صورت نیاز (اختیاری)"
                 >
+                    <div className="relative">
                     <textarea
                         value={formData.body}
                         onChange={(e) => handleInputChange('body', e.target.value)}
@@ -254,6 +281,7 @@ export default function WorkflowCreate() {
                         className="input-modern resize-none"
                         disabled={busy}
                     />
+                    </div>
                 </FormField>
 
                 {/* Submit Button */}
@@ -269,7 +297,7 @@ export default function WorkflowCreate() {
                     <button
                         type="submit"
                         disabled={busy || !isFormValid()}
-                        className="btn-primary min-w-[140px]"
+                        className="btn-primary min-w-[200px]"
                     >
                         {busy ? (
                             <>

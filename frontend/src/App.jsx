@@ -64,9 +64,9 @@ function AppContent() {
             <Route path="/" element={<ProtectedRoute><Shell /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/inbox" replace />} />
                 <Route path="inbox" element={<Dashboard />} />
-                <Route path="letters" element={<WorkflowList />} />
-                <Route path="letters/create" element={<WorkflowCreate />} />
-                <Route path="letters/:id" element={<WorkflowDetail />} />
+                <Route path="workflows" element={<WorkflowList />} />
+                <Route path="workflows/create" element={<WorkflowCreate />} />
+                <Route path="workflows/:id" element={<WorkflowDetail />} />
                 <Route path="reports" element={<Reports />} />
                 
                 {/* Admin Routes */}

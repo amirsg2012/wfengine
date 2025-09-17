@@ -68,7 +68,7 @@ export default function Shell() {
     // Navigation items
     const navigationItems = [
         { to: '/inbox', icon: Inbox, label: 'صندوق ورودی', badge: 3 },
-        { to: '/letters', icon: FileText, label: 'درخواست‌ها' },
+        { to: '/workflows', icon: FileText, label: 'درخواست‌ها' },
         { to: '/reports', icon: BarChart2, label: 'گزارش‌ها' },
     ];
 

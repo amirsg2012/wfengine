@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
     Info, List, Code, User, Calendar, FileText, Settings, Eye, EyeOff
 } from 'lucide-react';
+import StateChip from './StateChip';
 
 const renderValue = (value) => {
     if (value === null || value === undefined) {
@@ -68,7 +69,7 @@ const FormattedView = ({ data, showSensitive }) => {
             formatters: {
                 title: (value) => <span className="font-semibold text-primary-600">{value}</span>,
                 body: (value) => <div className="text-sm bg-primary-50 p-2 rounded border">{value || 'توضیحاتی وجود ندارد'}</div>,
-                state: (value) => <span className="badge-info">{value}</span>
+                state: (value) => <span className="badge-info"><StateChip label={value}/></span>
             }
         },
         applicant: {

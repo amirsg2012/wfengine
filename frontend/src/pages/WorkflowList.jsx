@@ -752,7 +752,7 @@ export default function WorkflowList() {
     return (
         <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
             <Header
-                onNewClick={() => navigate('/workflows/new')}
+                onNewClick={() => navigate('/workflows/create')}
                 count={filteredWorkflows.length}
             />
 
