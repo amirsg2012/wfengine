@@ -1,13 +1,127 @@
 <!doctype html>
-<html lang="en">
+<html dir="rtl" lang="fa">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <meta name="theme-color" content="#8b1a1a" />
+    <meta name="description" content="Workflow Management System" />
+    
+    <!-- Prevent FOUC (Flash of Unstyled Content) -->
+    <style>
+      /* Initial loading styles to prevent blank page */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background-color: #fafafa;
+        color: #181818;
+        line-height: 1.6;
+      }
+      
+      #root {
+        min-height: 100vh;
+        width: 100%;
+      }
+      
+      /* Dark mode initial styles */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #0a0a0a;
+          color: #e8e8e8;
+        }
+      }
+      
+      /* Loading indicator for initial render */
+      .app-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: inherit;
+      }
+      
+      .app-loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid rgba(139, 26, 26, 0.1);
+        border-top-color: #8b1a1a;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Prevent invisible text during font load */
+      .fonts-loading * {
+        opacity: 0;
+      }
+      
+      .fonts-loaded * {
+        opacity: 1;
+        transition: opacity 0.3s ease-in-out;
+      }
+    </style>
+    
+    <!-- Preload critical fonts if using custom fonts -->
+    <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/Vazirmatn-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    
+    <title>Workflow Management System</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Initial loading state -->
+    <div id="root">
+      <div class="app-loading">
+        <div class="app-loading-spinner"></div>
+      </div>
+    </div>
+    
+    <!-- Font loading detection -->
+    <script>
+      // Remove loading spinner once React mounts
+      window.addEventListener('DOMContentLoaded', function() {
+        // Add fonts-loaded class when fonts are ready
+        document.fonts.ready.then(function() {
+          document.body.classList.add('fonts-loaded');
+        });
+        
+        // Remove loading state after React mounts (with small delay)
+        setTimeout(function() {
+          const loader = document.querySelector('.app-loading');
+          if (loader) {
+            loader.style.opacity = '0';
+            loader.style.transition = 'opacity 0.3s ease-out';
+            setTimeout(function() {
+              if (loader && loader.parentNode) {
+                loader.remove();
+              }
+            }, 300);
+          }
+        }, 100);
+      });
+      
+      // Dark mode detection and application
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

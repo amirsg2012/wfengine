@@ -1,4 +1,4 @@
-// src/pages/Login.jsx
+// src/pages/Login.jsx - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, User, Eye, EyeOff, Loader2, BarChart2, FileText, Settings } from 'lucide-react';
@@ -11,44 +11,49 @@ const InputField = ({ id, label, type, value, onChange, placeholder, icon: Icon 
     const inputType = isPassword && isPasswordVisible ? 'text' : type;
 
     return (
-        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-            <label 
-                htmlFor={id} 
-                style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem', 
-                    fontWeight: '700', 
-                    fontSize: '0.875rem', 
-                    color: 'rgb(var(--color-text-secondary))',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.025em'
-                }}
-            >
+        <div style={{ marginBottom: '1.5rem' }}>
+            <label htmlFor={id} style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: 'rgb(var(--color-text-primary))',
+                marginBottom: '0.5rem'
+            }}>
                 {label}
             </label>
             <div style={{ position: 'relative' }}>
-                <span style={{ 
-                    position: 'absolute', 
-                    right: '1rem', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)', 
-                    color: 'rgb(var(--color-text-secondary))' 
+                <div style={{
+                    position: 'absolute',
+                    right: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'rgb(var(--color-text-secondary))'
                 }}>
                     <Icon style={{ width: '1.25rem', height: '1.25rem' }} />
-                </span>
+                </div>
                 <input
                     id={id}
                     type={inputType}
                     value={value}
-                    dir="ltr"
-                    onChange={onChange}
+                    onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
-                    required
-                    className="input-modern"
-                    style={{ 
-                        paddingRight: '3rem',
+                    style={{
+                        width: '100%',
+                        padding: '0.875rem 3rem 0.875rem 1rem',
+                        border: '2px solid rgb(var(--color-primary-200))',
+                        borderRadius: 'var(--rounded-xl)',
                         fontSize: '1rem',
-                        fontWeight: '500'
+                        transition: 'all 0.2s',
+                        background: 'rgb(var(--color-background))',
+                        color: 'rgb(var(--color-text-primary))'
+                    }}
+                    onFocus={(e) => {
+                        e.target.style.borderColor = 'rgb(var(--color-primary-500))';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(var(--color-primary-500), 0.1)';
+                    }}
+                    onBlur={(e) => {
+                        e.target.style.borderColor = 'rgb(var(--color-primary-200))';
+                        e.target.style.boxShadow = 'none';
                     }}
                 />
                 {isPassword && (
@@ -64,10 +69,8 @@ const InputField = ({ id, label, type, value, onChange, placeholder, icon: Icon 
                             border: 'none',
                             color: 'rgb(var(--color-text-secondary))',
                             cursor: 'pointer',
-                            transition: 'color 250ms ease'
+                            padding: '0.25rem'
                         }}
-                        onMouseEnter={(e) => e.target.style.color = 'rgb(var(--color-text-primary))'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgb(var(--color-text-secondary))'}
                         aria-label={isPasswordVisible ? "Hide password" : "Show password"}
                     >
                         {isPasswordVisible ? 
@@ -89,13 +92,14 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
 
     const { login, token } = useAuth();
-    
     const nav = useNavigate();
+
+    // Handle redirect if already logged in
     useEffect(() => {
-    if (token) {
-        nav('/inbox', { replace: true });
-    }
-}, [token, nav]);
+        if (token) {
+            nav('/inbox', { replace: true });
+        }
+    }, [token, nav]);
 
     async function handle(e) {
         e.preventDefault();
@@ -103,14 +107,21 @@ export default function Login() {
 
         setLoading(true);
         setError('');
+        
         try {
-            // Simulate network delay for better UX
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await login(username, password);
-            console.log('Login response received');
-            // nav('/inbox');
+            console.log('Starting login process...');
+            const result = await login(username, password);
+            
+            if (result.success) {
+                console.log('Login successful, navigating to dashboard...');
+                // Let the useEffect handle navigation based on token state
+                // Don't manually navigate here to avoid conflicts
+            } else {
+                setError(result.error || '\u0646\u0627\u0645 \u06a9\u0627\u0631\u0628\u0631\u06cc \u06cc\u0627 \u0631\u0645\u0632 \u0639\u0628\u0648\u0631 \u0627\u0634\u062a\u0628\u0627\u0647 \u0627\u0633\u062a.');
+            }
         } catch (err) {
-            setError(err?.message || 'نام کاربری یا رمز عبور اشتباه است.');
+            console.error('Login error:', err);
+            setError(err?.message || '\u062e\u0637\u0627 \u062f\u0631 \u0628\u0631\u0642\u0631\u0627\u0631\u06cc \u0627\u0631\u062a\u0628\u0627\u0637 \u0628\u0627 \u0633\u0631\u0648\u0631');
         } finally {
             setLoading(false);
         }
@@ -148,48 +159,47 @@ export default function Login() {
                             color: 'rgb(var(--color-text-primary))',
                             marginBottom: '0.5rem'
                         }}>
-                            ورود به سامانه
+                            \u0648\u0631\u0648\u062f \u0628\u0647 \u0633\u06cc\u0633\u062a\u0645
                         </h2>
                         <p style={{
                             color: 'rgb(var(--color-text-secondary))',
-                            fontSize: '1.125rem',
-                            fontWeight: '500'
+                            fontSize: '1rem'
                         }}>
-                            اطلاعات کاربری خود را وارد کنید
+                            \u0628\u0631\u0627\u06cc \u0627\u062f\u0627\u0645\u0647\u060c \u0648\u0627\u0631\u062f \u062d\u0633\u0627\u0628 \u06a9\u0627\u0631\u0628\u0631\u06cc \u062e\u0648\u062f \u0634\u0648\u06cc\u062f
                         </p>
                     </div>
 
-                    <form onSubmit={handle} style={{ marginTop: '2rem' }}>
+                    <form onSubmit={handle} style={{ width: '100%' }}>
                         <InputField
                             id="username"
-                            label="نام کاربری"
+                            label="\u0646\u0627\u0645 \u06a9\u0627\u0631\u0628\u0631\u06cc"
                             type="text"
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="admin"
+                            onChange={setUsername}
+                            placeholder="\u0646\u0627\u0645 \u06a9\u0627\u0631\u0628\u0631\u06cc \u062e\u0648\u062f \u0631\u0627 \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f"
                             icon={User}
                         />
 
                         <InputField
                             id="password"
-                            label="رمز عبور"
+                            label="\u0631\u0645\u0632 \u0639\u0628\u0648\u0631"
                             type="password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
+                            onChange={setPassword}
+                            placeholder="\u0631\u0645\u0632 \u0639\u0628\u0648\u0631 \u062e\u0648\u062f \u0631\u0627 \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f"
                             icon={Lock}
                         />
 
                         {error && (
                             <div style={{
                                 background: 'rgb(var(--color-error-50))',
-                                color: 'rgb(var(--color-error-600))',
-                                padding: '0.75rem 1rem',
-                                borderRadius: 'var(--rounded-xl)',
+                                border: '1px solid rgb(var(--color-error-200))',
+                                color: 'rgb(var(--color-error-700))',
+                                padding: '0.75rem',
+                                borderRadius: 'var(--rounded-lg)',
                                 fontSize: '0.875rem',
-                                fontWeight: '600',
                                 marginBottom: '1.5rem',
-                                border: '2px solid rgb(var(--color-error-200))'
+                                textAlign: 'center'
                             }}>
                                 {error}
                             </div>
@@ -198,164 +208,118 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="btn-primary"
                             style={{
                                 width: '100%',
+                                background: loading ? 'rgb(var(--color-primary-300))' : 'rgb(var(--color-primary-500))',
+                                color: 'white',
+                                border: 'none',
+                                padding: '1rem',
+                                borderRadius: 'var(--rounded-xl)',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '0.75rem',
-                                fontSize: '1.125rem',
-                                fontWeight: '700',
-                                padding: '1rem 2rem',
-                                opacity: loading ? 0.75 : 1,
-                                cursor: loading ? 'not-allowed' : 'pointer'
+                                gap: '0.5rem'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!loading) {
+                                    e.target.style.background = 'rgb(var(--color-primary-600))';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!loading) {
+                                    e.target.style.background = 'rgb(var(--color-primary-500))';
+                                }
                             }}
                         >
-                            {loading ? (
-                                <Loader2 style={{ width: '1.25rem', height: '1.25rem', animation: 'spin 1s linear infinite' }} />
-                            ) : (
-                                <Shield style={{ width: '1.25rem', height: '1.25rem' }} />
-                            )}
-                            <span>{loading ? 'در حال ورود...' : 'ورود به سامانه'}</span>
+                            {loading && <Loader2 style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />}
+                            {loading ? '\u062f\u0631 \u062d\u0627\u0644 \u0648\u0631\u0648\u062f...' : '\u0648\u0631\u0648\u062f'}
                         </button>
-
-                        <p style={{
-                            textAlign: 'center',
-                            marginTop: '1.5rem',
-                            fontSize: '0.875rem',
-                            color: 'rgb(var(--color-text-secondary))',
-                            fontWeight: '500'
-                        }}>
-                            در صورت بروز مشکل با واحد پشتیبانی تماس بگیرید
-                        </p>
                     </form>
                 </div>
 
-                {/* Right Side - Branding */}
-                <div style={{
-                    background: 'rgb(var(--color-primary-500))',
-                    color: 'white',
-                    padding: '3rem',
-                    borderRadius: 'var(--rounded-2xl)',
-                    boxShadow: 'var(--shadow-red)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                }}>
-                    {/* Background decoration */}
-                    <div style={{
-                        position: 'absolute',
-                        top: '-2rem',
-                        right: '-2rem',
-                        width: '8rem',
-                        height: '8rem',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        borderRadius: '50%'
-                    }}></div>
-                    
-                    <div style={{ position: 'relative', zIndex: 10 }}>
+                {/* Right Side - Welcome Section */}
+                <div style={{ padding: '2rem' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                         <div style={{
-                            width: '4rem',
-                            height: '4rem',
-                            background: 'rgba(255, 255, 255, 0.2)',
+                            width: '5rem',
+                            height: '5rem',
+                            background: 'rgb(var(--color-primary-500))',
                             borderRadius: 'var(--rounded-2xl)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            marginBottom: '2rem'
+                            margin: '0 auto 1.5rem',
+                            boxShadow: 'var(--shadow-xl)'
                         }}>
-                            <Shield style={{ width: '2rem', height: '2rem', color: 'white' }} />
+                            <Shield style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />
                         </div>
-
                         <h1 style={{
                             fontSize: '2.5rem',
-                            fontWeight: '700',
-                            marginBottom: '1rem',
-                            lineHeight: '1.2'
+                            fontWeight: '800',
+                            color: 'rgb(var(--color-text-primary))',
+                            marginBottom: '1rem'
                         }}>
-                            سامانه اتوماسیون اداری
+                            \u0627\u062a\u0648\u0645\u0627\u0633\u06cc\u0648\u0646 \u0627\u062f\u0627\u0631\u06cc
                         </h1>
-
                         <p style={{
                             fontSize: '1.125rem',
-                            marginBottom: '2rem',
-                            opacity: 0.9,
-                            fontWeight: '500',
+                            color: 'rgb(var(--color-text-secondary))',
                             lineHeight: '1.6'
                         }}>
-                            مدیریت هوشمند درخواست‌ها و فرآیندهای اداری شما
+                            \u0633\u06cc\u0633\u062a\u0645 \u0645\u062f\u06cc\u0631\u06cc\u062a \u0627\u0633\u0646\u0627\u062f \u0648 \u0641\u0631\u0622\u06cc\u0646\u062f\u0647\u0627\u06cc \u0627\u062f\u0627\u0631\u06cc \u0628\u0627 \u0642\u0627\u0628\u0644\u06cc\u062a\u200c\u0647\u0627\u06cc \u067e\u06cc\u0634\u0631\u0641\u062a\u0647 \u0648 \u0627\u0645\u0646\u06cc\u062a \u0628\u0627\u0644\u0627
                         </p>
+                    </div>
 
-                        {/* Feature badges */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: '1rem',
-                            marginTop: '2rem'
-                        }}>
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.15)',
+                    <div style={{ display: 'grid', gap: '1.5rem' }}>
+                        {[
+                            { icon: FileText, title: 'مدیریت اسناد', desc: '\u0633\u0627\u0632\u0645\u0627\u0646\u062f\u0647\u06cc \u0648 \u067e\u06cc\u06af\u06cc\u0631\u06cc \u0627\u0633\u0646\u0627\u062f \u0627\u062f\u0627\u0631\u06cc' },
+                            { icon: BarChart2, title: '\u06af\u0632\u0627\u0631\u0634\u200c\u06af\u06cc\u0631\u06cc', desc: '\u062a\u0648\u0644\u06cc\u062f \u06af\u0632\u0627\u0631\u0634\u200c\u0647\u0627\u06cc \u062a\u0641\u0635\u06cc\u0644\u06cc \u0648 \u0622\u0645\u0627\u0631\u06cc' },
+                            { icon: Settings, title: '\u062a\u0646\u0638\u06cc\u0645\u0627\u062a \u067e\u06cc\u0634\u0631\u0641\u062a\u0647', desc: '\u0634\u062e\u0635\u06cc\u200c\u0633\u0627\u0632\u06cc \u0633\u06cc\u0633\u062a\u0645 \u0628\u0631 \u0627\u0633\u0627\u0633 \u0646\u06cc\u0627\u0632' }
+                        ].map((feature, index) => (
+                            <div key={index} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '1rem',
                                 padding: '1rem',
+                                background: 'rgb(var(--color-surface))',
                                 borderRadius: 'var(--rounded-xl)',
-                                textAlign: 'center',
-                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                                border: '1px solid rgb(var(--color-primary-100))'
                             }}>
-                                <FileText style={{ width: '1.5rem', height: '1.5rem', margin: '0 auto 0.5rem' }} />
-                                <div style={{ fontSize: '0.75rem', fontWeight: '600' }}>مدیریت سیستم</div>
+                                <div style={{
+                                    width: '3rem',
+                                    height: '3rem',
+                                    background: 'rgb(var(--color-primary-100))',
+                                    borderRadius: 'var(--rounded-lg)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <feature.icon style={{ width: '1.5rem', height: '1.5rem', color: 'rgb(var(--color-primary-600))' }} />
+                                </div>
+                                <div>
+                                    <h3 style={{
+                                        fontWeight: '600',
+                                        color: 'rgb(var(--color-text-primary))',
+                                        marginBottom: '0.25rem'
+                                    }}>
+                                        {feature.title}
+                                    </h3>
+                                    <p style={{
+                                        fontSize: '0.875rem',
+                                        color: 'rgb(var(--color-text-secondary))'
+                                    }}>
+                                        {feature.desc}
+                                    </p>
+                                </div>
                             </div>
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.15)',
-                                padding: '1rem',
-                                borderRadius: 'var(--rounded-xl)',
-                                textAlign: 'center',
-                                border: '1px solid rgba(255, 255, 255, 0.2)'
-                            }}>
-                                <BarChart2 style={{ width: '1.5rem', height: '1.5rem', margin: '0 auto 0.5rem' }} />
-                                <div style={{ fontSize: '0.75rem', fontWeight: '600' }}>گزارش‌های تحلیلی</div>
-                            </div>
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.15)',
-                                padding: '1rem',
-                                borderRadius: 'var(--rounded-xl)',
-                                textAlign: 'center',
-                                border: '1px solid rgba(255, 255, 255, 0.2)'
-                            }}>
-                                <Settings style={{ width: '1.5rem', height: '1.5rem', margin: '0 auto 0.5rem' }} />
-                                <div style={{ fontSize: '0.75rem', fontWeight: '600' }}>داشبورد تحلیلی</div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>
-
-            {/* Mobile responsive styles */}
-            <style>
-                {`
-                    @keyframes spin {
-                        from { transform: rotate(0deg); }
-                        to { transform: rotate(360deg); }
-                    }
-                    
-                    @media (max-width: 768px) {
-                        .login-container {
-                            grid-template-columns: 1fr !important;
-                            gap: 2rem !important;
-                        }
-                        
-                        .login-form, .login-branding {
-                            padding: 2rem !important;
-                        }
-                        
-                        .login-title {
-                            font-size: 1.75rem !important;
-                        }
-                        
-                        .branding-title {
-                            font-size: 2rem !important;
-                        }
-                    }
-                `}
-            </style>
         </div>
     );
 }

@@ -1,6 +1,6 @@
-// src/App.jsx
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// src/App.jsx - FIXED VERSION
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Shell from './layout/Shell';
 import Login from './pages/Login';
@@ -17,7 +17,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { AuthProvider } from './api/useAuth';
 import useAuth from './api/useAuth';
-import './App.css';
+import { setNavigateRef } from './api/client'; // Import the function to set navigation reference
 
 // Create a client
 const queryClient = new QueryClient({
@@ -31,6 +31,12 @@ const queryClient = new QueryClient({
 
 function AppContent() {
     const { token, loading } = useAuth();
+    const navigate = useNavigate();
+
+    // Set the navigate reference for the API client
+    useEffect(() => {
+        setNavigateRef(navigate);
+    }, [navigate]);
 
     console.log('AppContent render - token:', token, 'loading:', loading);
 

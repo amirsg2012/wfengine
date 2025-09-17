@@ -30,13 +30,13 @@ export default function Dashboard() {
                         <LayoutGrid className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-text-primary">\u062f\u0627\u0634\u0628\u0648\u0631\u062f \u0627\u0635\u0644\u06cc</h1>
-                        <p className="text-text-secondary mt-1">\u062e\u0644\u0627\u0635\u0647 \u0641\u0639\u0627\u0644\u06cc\u062a\u200c\u0647\u0627 \u0648 \u062f\u0633\u062a\u0631\u0633\u06cc \u0633\u0631\u06cc\u0639</p>
+                        <h1 className="text-3xl font-bold text-text-primary">داشبورد اصلی</h1>
+                        <p className="text-text-secondary mt-1">خلاصه فعالیت‌ها و دسترسی سریع</p>
                     </div>
                 </div>
                 <button className="btn-primary flex items-center justify-center gap-2 self-start md:self-auto">
                     <Plus className="w-5 h-5" />
-                    <span>\u0627\u06cc\u062c\u0627\u062f \u062f\u0631\u062e\u0648\u0627\u0633\u062a \u0641\u0648\u0631\u06cc</span>
+                    <span>ایجاد درخواست فوری</span>
                 </button>
             </div>
 
@@ -45,22 +45,22 @@ export default function Dashboard() {
                 {/* Updated Stats */}
                 <div className="col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatWidget 
-                        title="\u0646\u06cc\u0627\u0632 \u0628\u0647 \u0627\u0642\u062f\u0627\u0645 \u0634\u0645\u0627" 
+                        title="نیاز به اقدام شما" 
                         value={stats?.pending_my_action || 0} 
                         type="pending" 
                     />
                     <StatWidget 
-                        title="\u062f\u0631 \u0627\u0646\u062a\u0638\u0627\u0631 \u062f\u06cc\u06af\u0631\u0627\u0646" 
+                        title="در انتظار دیگران" 
                         value={stats?.pending_others || 0} 
                         type="waiting" 
                     />
                     <StatWidget 
-                        title="\u062a\u06a9\u0645\u06cc\u0644 \u0634\u062f\u0647" 
+                        title="تکمیل شده" 
                         value={stats?.completed || 0} 
                         type="done" 
                     />
                     <StatWidget 
-                        title="\u06a9\u0644 \u062f\u0631\u062e\u0648\u0627\u0633\u062a\u200c\u0647\u0627" 
+                        title="کل درخواست‌ها" 
                         value={stats?.total_workflows || 0} 
                         type="total" 
                     />
@@ -69,10 +69,10 @@ export default function Dashboard() {
                 {/* Inbox - Now shows workflows requiring user action */}
                 <div className="col-span-12 lg:col-span-8">
                     <InboxWidget 
-                        title="\u0635\u0646\u062f\u0648\u0642 \u0648\u0631\u0648\u062f\u06cc - \u0646\u06cc\u0627\u0632 \u0628\u0647 \u0627\u0642\u062f\u0627\u0645 \u0634\u0645\u0627"
+                        title="صندوق ورودی - نیاز به اقدام شما"
                         workflows={inboxData} 
                         loading={loading} 
-                        emptyMessage="\u062a\u0628\u0631\u06cc\u06a9! \u0647\u06cc\u0686 \u06a9\u0627\u0631\u06cc \u062f\u0631 \u0635\u0641 \u0627\u0646\u062a\u0638\u0627\u0631 \u0634\u0645\u0627 \u0646\u06cc\u0633\u062a."
+                        emptyMessage="تبریک! هیچ کاری در صف انتظار شما نیست."
                         showActionButtons={true}
                     />
                 </div>

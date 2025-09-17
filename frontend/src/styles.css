@@ -1,0 +1,1202 @@
+/* src/styles.css - DEEP BURGUNDY THEME WITH 3D EFFECTS */
+
+/* 1. Import Tailwind CSS v4 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 2. DEEP BURGUNDY THEME VARIABLES */
+:root {
+    /* Light mode - Clean whites with burgundy accents */
+    --color-background: 250 250 250;
+    --color-surface: 255 255 255;
+    --color-text-primary: 24 24 24;
+    --color-text-secondary: 82 82 82;
+
+    /* DEEP BURGUNDY PALETTE - Darker than Coca-Cola */
+    --color-primary-50: 250 242 242;
+    --color-primary-100: 245 229 229;
+    --color-primary-200: 235 199 199;
+    --color-primary-300: 215 149 149;
+    --color-primary-400: 185 89 89;
+    --color-primary-500: 139 26 26;    /* Main deep burgundy #8b1a1a */
+    --color-primary-600: 115 20 20;
+    --color-primary-700: 89 15 15;
+    --color-primary-800: 64 10 10;
+    --color-primary-900: 40 5 5;
+
+    /* Secondary darker burgundy */
+    --color-secondary-50: 245 235 235;
+    --color-secondary-100: 230 210 210;
+    --color-secondary-200: 200 160 160;
+    --color-secondary-300: 160 110 110;
+    --color-secondary-400: 120 60 60;
+    --color-secondary-500: 80 10 10;
+    --color-secondary-600: 60 5 5;
+    --color-secondary-700: 40 0 0;
+
+    /* Status colors */
+    --color-success-50: 240 253 244;
+    --color-success-100: 220 252 231;
+    --color-success-500: 34 197 94;
+    --color-success-600: 22 163 74;
+
+    --color-warning-50: 255 251 235;
+    --color-warning-100: 254 243 199;
+    --color-warning-500: 245 158 11;
+    --color-warning-600: 217 119 6;
+
+    --color-error-50: 250 242 242;
+    --color-error-100: 245 229 229;
+    --color-error-500: 139 26 26;
+    --color-error-600: 115 20 20;
+
+    /* Typography */
+    --font-sans: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, ui-sans-serif, system-ui, sans-serif;
+
+    /* Enhanced radius */
+    --rounded-xl: 16px;
+    --rounded-2xl: 20px;
+    --rounded-3xl: 28px;
+
+    /* 3D Embossed shadows for light mode */
+    --shadow-emboss: inset 0 1px 2px 0 rgb(255 255 255 / 0.9), inset 0 -1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-emboss-strong: inset 0 2px 4px 0 rgb(255 255 255 / 1), inset 0 -2px 4px 0 rgb(0 0 0 / 0.1);
+    
+    /* Depth shadows */
+    --shadow-3d-sm: 0 2px 4px 0 rgb(0 0 0 / 0.08), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-3d-md: 0 4px 8px 0 rgb(0 0 0 / 0.12), 0 2px 4px 0 rgb(0 0 0 / 0.06);
+    --shadow-3d-lg: 0 8px 16px 0 rgb(0 0 0 / 0.15), 0 4px 8px 0 rgb(0 0 0 / 0.08);
+    --shadow-3d-xl: 0 12px 24px 0 rgb(0 0 0 / 0.18), 0 6px 12px 0 rgb(0 0 0 / 0.1);
+    --shadow-3d-2xl: 0 16px 32px 0 rgb(0 0 0 / 0.24), 0 8px 16px 0 rgb(0 0 0 / 0.12);
+
+    /* Burgundy 3D shadows */
+    --shadow-red-3d: 0 4px 8px 0 rgb(139 26 26 / 0.15), 0 2px 4px 0 rgb(139 26 26 / 0.08);
+    --shadow-red-3d-lg: 0 8px 16px 0 rgb(139 26 26 / 0.2), 0 4px 8px 0 rgb(139 26 26 / 0.1);
+}
+
+/* Dark mode - Deep blacks with burgundy */
+.dark {
+    --color-background: 10 10 10;        /* Deep black */
+    --color-surface: 20 20 20;
+    --color-text-primary: 232 232 232;
+    --color-text-secondary: 168 168 168;
+
+    /* Deep burgundy palette for dark mode */
+    --color-primary-50: 42 10 10;
+    --color-primary-100: 61 15 15;
+    --color-primary-200: 80 20 20;
+    --color-primary-300: 99 25 25;
+    --color-primary-400: 118 30 30;
+    --color-primary-500: 139 26 26;    /* Main deep burgundy #8b1a1a */
+    --color-primary-600: 160 34 34;
+    --color-primary-700: 181 42 42;
+    --color-primary-800: 202 50 50;
+    --color-primary-900: 223 58 58;
+
+    /* Dark mode emboss effects */
+    --shadow-emboss: inset 0 1px 2px 0 rgb(255 255 255 / 0.03), inset 0 -1px 2px 0 rgb(0 0 0 / 0.8);
+    --shadow-emboss-strong: inset 0 2px 4px 0 rgb(255 255 255 / 0.05), inset 0 -2px 4px 0 rgb(0 0 0 / 0.9);
+    
+    /* Enhanced 3D shadows for dark mode */
+    --shadow-3d-sm: 0 2px 4px 0 rgb(0 0 0 / 0.6), 0 1px 2px 0 rgb(139 26 26 / 0.05);
+    --shadow-3d-md: 0 4px 8px 0 rgb(0 0 0 / 0.7), 0 2px 4px 0 rgb(139 26 26 / 0.08);
+    --shadow-3d-lg: 0 8px 16px 0 rgb(0 0 0 / 0.8), 0 4px 8px 0 rgb(139 26 26 / 0.1);
+    --shadow-3d-xl: 0 12px 24px 0 rgb(0 0 0 / 0.85), 0 6px 12px 0 rgb(139 26 26 / 0.12);
+    --shadow-3d-2xl: 0 16px 32px 0 rgb(0 0 0 / 0.9), 0 8px 16px 0 rgb(139 26 26 / 0.15);
+
+    --shadow-red-3d: 0 4px 8px 0 rgb(139 26 26 / 0.3), 0 2px 4px 0 rgb(139 26 26 / 0.2);
+    --shadow-red-3d-lg: 0 8px 16px 0 rgb(139 26 26 / 0.4), 0 4px 8px 0 rgb(139 26 26 / 0.25);
+}
+
+/* 3. CLEAN BASE STYLES - FIXED OVERFLOW */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: rgb(var(--color-background));
+    color: rgb(var(--color-text-primary));
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+#root {
+    min-height: 100vh;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(var(--color-surface));
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-primary-500));
+    border-radius: 5px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-primary-600));
+}
+
+/* Hide scrollbars utility class */
+.scrollbar-hide {
+    -ms-overflow-style: none ;
+    scrollbar-width: none ;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none ;
+}
+
+/* 4. BUTTON STYLES WITH 3D EFFECTS - SOLID COLORS */
+.btn-primary {
+    background: rgb(var(--color-primary-500)) ;
+    color: white ;
+    font-weight: 700 ;
+    padding: 14px 28px ;
+    border-radius: var(--rounded-xl) ;
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) ;
+    box-shadow: var(--shadow-3d-md), var(--shadow-emboss) ;
+    border: 1px solid rgb(var(--color-primary-700)) ;
+    text-transform: uppercase ;
+    letter-spacing: 0.025em ;
+    cursor: pointer ;
+    position: relative ;
+    z-index: 1 ;
+}
+
+.btn-primary:hover {
+    background: rgb(var(--color-primary-600)) ;
+    box-shadow: var(--shadow-3d-lg), var(--shadow-emboss-strong) ;
+    transform: translateY(-2px) ;
+}
+
+.btn-primary:active {
+    transform: translateY(0) ;
+    box-shadow: var(--shadow-3d-sm), inset 0 2px 4px 0 rgb(0 0 0 / 0.3) ;
+}
+
+.btn-secondary {
+    background: rgb(var(--color-secondary-500)) ;
+    color: white ;
+    font-weight: 700 ;
+    padding: 14px 28px ;
+    border-radius: var(--rounded-xl) ;
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) ;
+    box-shadow: var(--shadow-3d-md), var(--shadow-emboss) ;
+    border: 1px solid rgb(var(--color-secondary-700)) ;
+    text-transform: uppercase ;
+    letter-spacing: 0.025em ;
+    cursor: pointer ;
+    position: relative ;
+    z-index: 1 ;
+}
+
+.btn-secondary:hover {
+    background: rgb(var(--color-secondary-600)) ;
+    box-shadow: var(--shadow-3d-lg), var(--shadow-emboss-strong) ;
+    transform: translateY(-2px) ;
+}
+
+.btn-ghost {
+    background: rgb(var(--color-surface)) ;
+    color: rgb(var(--color-primary-600)) ;
+    font-weight: 600 ;
+    padding: 14px 28px ;
+    border-radius: var(--rounded-xl) ;
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) ;
+    border: 2px solid rgb(var(--color-primary-300)) ;
+    box-shadow: var(--shadow-3d-sm), var(--shadow-emboss) ;
+    cursor: pointer ;
+    position: relative ;
+    z-index: 1 ;
+}
+
+.btn-ghost:hover {
+    background: rgb(var(--color-primary-100)) ;
+    border-color: rgb(var(--color-primary-500)) ;
+    color: rgb(var(--color-primary-700)) ;
+    box-shadow: var(--shadow-3d-md), var(--shadow-emboss-strong) ;
+    transform: translateY(-1px) ;
+}
+
+/* 5. INPUT STYLES WITH 3D EFFECTS - SOLID BACKGROUNDS */
+.input-modern {
+    width: 100% ;
+    padding: 14px 18px ;
+    background: rgb(var(--color-surface)) ;
+    border: 2px solid rgb(var(--color-primary-200)) ;
+    border-radius: var(--rounded-xl) ;
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) ;
+    outline: none ;
+    color: rgb(var(--color-text-primary)) ;
+    font-weight: 500 ;
+    box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05), var(--shadow-3d-sm) ;
+}
+
+.input-modern:focus {
+    border-color: rgb(var(--color-primary-500)) ;
+    background: rgb(var(--color-surface)) ;
+    box-shadow: inset 0 2px 4px 0 rgb(139 26 26 / 0.05), var(--shadow-3d-md), 0 0 0 4px rgb(var(--color-primary-500) / 0.1) ;
+    transform: translateY(-1px) ;
+}
+
+.input-modern::placeholder {
+    color: rgb(var(--color-text-secondary)) ;
+    opacity: 0.5 ;
+}
+
+/* 6. CARD STYLES WITH 3D EFFECTS - SOLID BACKGROUNDS */
+.card-modern {
+    background: rgb(var(--color-surface)) ;
+    border-radius: var(--rounded-2xl) ;
+    box-shadow: var(--shadow-3d-lg) ;
+    border: 1px solid rgba(139, 26, 26, 0.1) ;
+    padding: 28px ;
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) ;
+    position: relative ;
+    display: block ;
+}
+
+.card-modern::before {
+    content: '' ;
+    position: absolute ;
+    inset: -1px ;
+    border-radius: var(--rounded-2xl) ;
+    padding: 1px ;
+    background: rgb(var(--color-primary-500)) ;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) ;
+    -webkit-mask-composite: xor ;
+    mask-composite: exclude ;
+    opacity: 0 ;
+    transition: opacity 250ms ease ;
+}
+
+.card-modern:hover {
+    box-shadow: var(--shadow-3d-xl), var(--shadow-emboss-strong) ;
+    transform: translateY(-4px) ;
+}
+
+.card-modern:hover::before {
+    opacity: 0.3 ;
+}
+
+/* 7. SOLID COLOR BACKGROUNDS */
+.bg-primary-gradient,
+.bg-primary-gradient-light,
+.bg-primary-gradient-dark {
+    background: rgb(var(--color-primary-500)) ;
+}
+
+.bg-secondary-gradient {
+    background: rgb(var(--color-secondary-500)) ;
+}
+
+.bg-primary-500 {
+    background-color: rgb(var(--color-primary-500)) ;
+}
+
+.bg-primary-600 {
+    background-color: rgb(var(--color-primary-600)) ;
+}
+
+.bg-secondary-500 {
+    background-color: rgb(var(--color-secondary-500)) ;
+}
+
+.bg-secondary-600 {
+    background-color: rgb(var(--color-secondary-600)) ;
+}
+
+.bg-success-500 {
+    background-color: rgb(var(--color-success-500)) ;
+}
+
+.bg-success-600 {
+    background-color: rgb(var(--color-success-600)) ;
+}
+
+.bg-primary-25 {
+    background-color: rgb(var(--color-primary-50) / 0.5) ;
+}
+
+.bg-primary-50 {
+    background-color: rgb(var(--color-primary-50)) ;
+}
+
+.bg-primary-100 {
+    background-color: rgb(var(--color-primary-100)) ;
+}
+
+.bg-error-50 {
+    background-color: rgb(var(--color-error-50)) ;
+}
+
+.bg-error-500 {
+    background-color: rgb(var(--color-error-500)) ;
+}
+
+.bg-error-600 {
+    background-color: rgb(var(--color-error-600)) ;
+}
+
+/* 8. TEXT COLORS */
+.text-white {
+    color: rgb(255 255 255) ;
+}
+
+.text-black {
+    color: rgb(0 0 0) ;
+}
+
+.text-text-primary {
+    color: rgb(var(--color-text-primary)) ;
+}
+
+.text-text-secondary {
+    color: rgb(var(--color-text-secondary)) ;
+}
+
+.text-primary-500 {
+    color: rgb(var(--color-primary-500)) ;
+}
+
+.text-primary-600 {
+    color: rgb(var(--color-primary-600)) ;
+}
+
+.text-primary-700 {
+    color: rgb(var(--color-primary-700)) ;
+}
+
+.text-error-500 {
+    color: rgb(var(--color-error-500)) ;
+}
+
+.text-error-600 {
+    color: rgb(var(--color-error-600)) ;
+}
+
+.text-error-700 {
+    color: rgb(var(--color-error-700)) ;
+}
+
+.text-warning-500 {
+    color: rgb(var(--color-warning-500)) ;
+}
+
+/* 9. 3D SHADOW CLASSES */
+.shadow-3d-sm {
+    box-shadow: var(--shadow-3d-sm) ;
+}
+
+.shadow-3d-md {
+    box-shadow: var(--shadow-3d-md) ;
+}
+
+.shadow-3d-lg {
+    box-shadow: var(--shadow-3d-lg) ;
+}
+
+.shadow-3d-xl {
+    box-shadow: var(--shadow-3d-xl) ;
+}
+
+.shadow-3d-2xl {
+    box-shadow: var(--shadow-3d-2xl) ;
+}
+
+.shadow-emboss {
+    box-shadow: var(--shadow-emboss) ;
+}
+
+.shadow-emboss-strong {
+    box-shadow: var(--shadow-emboss-strong) ;
+}
+
+.shadow-red-3d {
+    box-shadow: var(--shadow-red-3d) ;
+}
+
+.shadow-red-3d-lg {
+    box-shadow: var(--shadow-red-3d-lg) ;
+}
+
+.shadow-colored {
+    box-shadow: 0 4px 8px 0 rgb(var(--color-primary-500) / 0.2), 0 2px 4px 0 rgb(var(--color-primary-500) / 0.1) ;
+}
+
+.shadow-lg {
+    box-shadow: var(--shadow-3d-lg) ;
+}
+
+.shadow-xl {
+    box-shadow: var(--shadow-3d-xl) ;
+}
+
+/* 10. BORDER STYLES */
+.border-primary-50 {
+    border-color: rgb(var(--color-primary-50)) ;
+}
+
+.border-primary-100 {
+    border-color: rgb(var(--color-primary-100)) ;
+}
+
+.border-primary-200 {
+    border-color: rgb(var(--color-primary-200)) ;
+}
+
+.border-primary-300 {
+    border-color: rgb(var(--color-primary-300)) ;
+}
+
+.border-primary-500 {
+    border-color: rgb(var(--color-primary-500)) ;
+}
+
+.border-primary-600 {
+    border-color: rgb(var(--color-primary-600)) ;
+}
+
+.border-transparent {
+    border-color: transparent ;
+}
+
+.border-2 {
+    border-width: 2px ;
+}
+
+.border-3 {
+    border-width: 3px ;
+}
+
+.border-b {
+    border-bottom-width: 1px ;
+}
+
+.border-b-2 {
+    border-bottom-width: 2px ;
+}
+
+.border-t-2 {
+    border-top-width: 2px ;
+}
+
+.border-t-transparent {
+    border-top-color: transparent ;
+}
+
+.border-l-2 {
+    border-left-width: 2px ;
+}
+
+.border-l-4 {
+    border-left-width: 4px ;
+}
+
+.border-l-primary-500 {
+    border-left-color: rgb(var(--color-primary-500)) ;
+}
+
+/* 11. BORDER RADIUS */
+.rounded-xl {
+    border-radius: var(--rounded-xl) ;
+}
+
+.rounded-2xl {
+    border-radius: var(--rounded-2xl) ;
+}
+
+.rounded-full {
+    border-radius: 9999px ;
+}
+
+/* 12. LAYOUT UTILITIES */
+.bg-background {
+    background-color: rgb(var(--color-background)) ;
+}
+
+.bg-surface {
+    background-color: rgb(var(--color-surface)) ;
+}
+
+.min-h-screen {
+    min-height: 100vh ;
+}
+
+.min-h-full {
+    min-height: 100% ;
+}
+
+.h-screen {
+    height: 100vh ;
+}
+
+.h-full {
+    height: 100% ;
+}
+
+.w-full {
+    width: 100% ;
+}
+
+.flex {
+    display: flex ;
+}
+
+.inline-flex {
+    display: inline-flex ;
+}
+
+.flex-col {
+    flex-direction: column ;
+}
+
+.flex-row {
+    flex-direction: row ;
+}
+
+.flex-1 {
+    flex: 1 1 0% ;
+}
+
+.flex-auto {
+    flex: 1 1 auto ;
+}
+
+.flex-initial {
+    flex: 0 1 auto ;
+}
+
+.flex-none {
+    flex: none ;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0 ;
+}
+
+.items-center {
+    align-items: center ;
+}
+
+.justify-center {
+    justify-content: center ;
+}
+
+.justify-between {
+    justify-content: space-between ;
+}
+
+.gap-3 {
+    gap: 0.75rem ;
+}
+
+.gap-4 {
+    gap: 1rem ;
+}
+
+.gap-6 {
+    gap: 1.5rem ;
+}
+
+.gap-8 {
+    gap: 2rem ;
+}
+
+.grid {
+    display: grid ;
+}
+
+.grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) ;
+}
+
+.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) ;
+}
+
+.grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) ;
+}
+
+.relative {
+    position: relative ;
+}
+
+.absolute {
+    position: absolute ;
+}
+
+.fixed {
+    position: fixed ;
+}
+
+.sticky {
+    position: sticky ;
+}
+
+.static {
+    position: static ;
+}
+
+.inset-0 {
+    top: 0 ;
+    right: 0 ;
+    bottom: 0 ;
+    left: 0 ;
+}
+
+.inset-x-0 {
+    left: 0 ;
+    right: 0 ;
+}
+
+.inset-y-0 {
+    top: 0 ;
+    bottom: 0 ;
+}
+
+.top-0 {
+    top: 0 ;
+}
+
+.right-0 {
+    right: 0 ;
+}
+
+.top-4 {
+    top: 1rem ;
+}
+
+.left-4 {
+    left: 1rem ;
+}
+
+.top-full {
+    top: 100% ;
+}
+
+.overflow-hidden {
+    overflow: hidden ;
+}
+
+.overflow-auto {
+    overflow: auto ;
+}
+
+.overflow-y-auto {
+    overflow-y: auto ;
+}
+
+.overflow-x-hidden {
+    overflow-x: hidden ;
+}
+
+.hidden {
+    display: none ;
+}
+
+.block {
+    display: block ;
+}
+
+.inline-block {
+    display: inline-block ;
+}
+
+.inline {
+    display: inline ;
+}
+
+.transition-all {
+    transition-property: all ;
+}
+
+.duration-200 {
+    transition-duration: 200ms ;
+}
+
+.duration-250 {
+    transition-duration: 250ms ;
+}
+
+/* Padding utilities */
+.p-3 {
+    padding: 0.75rem ;
+}
+
+.p-4 {
+    padding: 1rem ;
+}
+
+.p-6 {
+    padding: 1.5rem ;
+}
+
+.p-8 {
+    padding: 2rem ;
+}
+
+.px-2 {
+    padding-left: 0.5rem ;
+    padding-right: 0.5rem ;
+}
+
+.px-3 {
+    padding-left: 0.75rem ;
+    padding-right: 0.75rem ;
+}
+
+.px-4 {
+    padding-left: 1rem ;
+    padding-right: 1rem ;
+}
+
+.px-5 {
+    padding-left: 1.25rem ;
+    padding-right: 1.25rem ;
+}
+
+.py-1 {
+    padding-top: 0.25rem ;
+    padding-bottom: 0.25rem ;
+}
+
+.py-3 {
+    padding-top: 0.75rem ;
+    padding-bottom: 0.75rem ;
+}
+
+.py-4 {
+    padding-top: 1rem ;
+    padding-bottom: 1rem ;
+}
+
+/* Margin utilities */
+.mx-auto {
+    margin-left: auto ;
+    margin-right: auto ;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem ;
+}
+
+.mb-3 {
+    margin-bottom: 0.75rem ;
+}
+
+.mb-4 {
+    margin-bottom: 1rem ;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem ;
+}
+
+.mb-8 {
+    margin-bottom: 2rem ;
+}
+
+.mt-3 {
+    margin-top: 0.75rem ;
+}
+
+/* Width & Height utilities */
+.w-3 {
+    width: 0.75rem ;
+}
+
+.h-3 {
+    height: 0.75rem ;
+}
+
+.w-4 {
+    width: 1rem ;
+}
+
+.h-4 {
+    height: 1rem ;
+}
+
+.w-5 {
+    width: 1.25rem ;
+}
+
+.h-5 {
+    height: 1.25rem ;
+}
+
+.w-6 {
+    width: 1.5rem ;
+}
+
+.h-6 {
+    height: 1.5rem ;
+}
+
+.w-8 {
+    width: 2rem ;
+}
+
+.h-8 {
+    height: 2rem ;
+}
+
+.w-9 {
+    width: 2.25rem ;
+}
+
+.h-9 {
+    height: 2.25rem ;
+}
+
+.w-10 {
+    width: 2.5rem ;
+}
+
+.h-10 {
+    height: 2.5rem ;
+}
+
+.w-12 {
+    width: 3rem ;
+}
+
+.h-12 {
+    height: 3rem ;
+}
+
+.w-14 {
+    width: 3.5rem ;
+}
+
+.h-14 {
+    height: 3.5rem ;
+}
+
+.w-16 {
+    width: 4rem ;
+}
+
+.h-16 {
+    height: 4rem ;
+}
+
+.h-full {
+    height: 100% ;
+}
+
+.max-w-sm {
+    max-width: 24rem ;
+}
+
+/* Text utilities */
+.text-xs {
+    font-size: 0.75rem ;
+    line-height: 1rem ;
+}
+
+.text-sm {
+    font-size: 0.875rem ;
+    line-height: 1.25rem ;
+}
+
+.text-base {
+    font-size: 1rem ;
+    line-height: 1.5rem ;
+}
+
+.text-lg {
+    font-size: 1.125rem ;
+    line-height: 1.75rem ;
+}
+
+.text-xl {
+    font-size: 1.25rem ;
+    line-height: 1.75rem ;
+}
+
+.text-2xl {
+    font-size: 1.5rem ;
+    line-height: 2rem ;
+}
+
+.text-4xl {
+    font-size: 2.25rem ;
+    line-height: 2.5rem ;
+}
+
+.font-medium {
+    font-weight: 500 ;
+}
+
+.font-bold {
+    font-weight: 700 ;
+}
+
+.text-center {
+    text-align: center ;
+}
+
+.text-right {
+    text-align: right ;
+}
+
+.uppercase {
+    text-transform: uppercase ;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05em ;
+}
+
+.whitespace-nowrap {
+    white-space: nowrap ;
+}
+
+/* Other utilities */
+.space-y-3 > * + * {
+    margin-top: 0.75rem ;
+}
+
+.rotate-180 {
+    transform: rotate(180deg) ;
+}
+
+.scale-105 {
+    transform: scale(1.05) ;
+}
+
+.backdrop-blur-sm {
+    backdrop-filter: blur(4px) ;
+}
+
+.cursor-pointer {
+    cursor: pointer ;
+}
+
+.opacity-0 {
+    opacity: 0 ;
+}
+
+.opacity-50 {
+    opacity: 0.5 ;
+}
+
+.opacity-75 {
+    opacity: 0.75 ;
+}
+
+.opacity-100 {
+    opacity: 1 ;
+}
+
+.transition-opacity {
+    transition-property: opacity ;
+}
+
+.transition-colors {
+    transition-property: color, background-color, border-color ;
+}
+
+.transition-transform {
+    transition-property: transform ;
+}
+
+.ease {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) ;
+}
+
+.order-1 {
+    order: 1 ;
+}
+
+.order-2 {
+    order: 2 ;
+}
+
+.z-0 {
+    z-index: 0 ;
+}
+
+.z-10 {
+    z-index: 10 ;
+}
+
+.z-20 {
+    z-index: 20 ;
+}
+
+.z-30 {
+    z-index: 30 ;
+}
+
+.z-40 {
+    z-index: 40 ;
+}
+
+.z-50 {
+    z-index: 50 ;
+}
+
+.group:hover .group-hover\:scale-105 {
+    transform: scale(1.05) ;
+}
+
+.group:hover .group-hover\:shadow-red-lg {
+    box-shadow: var(--shadow-red-lg) ;
+}
+
+.hover\:bg-primary-50:hover {
+    background-color: rgb(var(--color-primary-50)) ;
+}
+
+.hover\:bg-primary-600:hover {
+    background-color: rgb(var(--color-primary-600)) ;
+}
+
+.hover\:bg-error-50:hover {
+    background-color: rgb(var(--color-error-50)) ;
+}
+
+.hover\:text-text-primary:hover {
+    color: rgb(var(--color-text-primary)) ;
+}
+
+.hover\:text-error-700:hover {
+    color: rgb(var(--color-error-700)) ;
+}
+
+.hover\:border-primary-200:hover {
+    border-color: rgb(var(--color-primary-200)) ;
+}
+
+.hover\:shadow-lg:hover {
+    box-shadow: var(--shadow-3d-lg) ;
+}
+
+.last\:border-b-0:last-child {
+    border-bottom-width: 0 ;
+}
+
+/* Responsive utilities */
+@media (min-width: 768px) {
+    .md\:flex {
+        display: flex ;
+    }
+    
+    .md\:hidden {
+        display: none ;
+    }
+}
+
+@media (min-width: 1024px) {
+    .lg\:hidden {
+        display: none ;
+    }
+}
+
+/* 13. ANIMATIONS */
+.animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite ;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite ;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* 14. DARK MODE OVERRIDES */
+.dark .bg-background {
+    background-color: rgb(var(--color-background)) ;
+}
+
+.dark .bg-surface {
+    background-color: rgb(var(--color-surface)) ;
+}
+
+.dark .text-text-primary {
+    color: rgb(var(--color-text-primary)) ;
+}
+
+.dark .text-text-secondary {
+    color: rgb(var(--color-text-secondary)) ;
+}
+
+.dark .input-modern {
+    background: rgb(var(--color-surface)) ;
+    border-color: rgb(var(--color-primary-400) / 0.3) ;
+}
+
+.dark .input-modern:focus {
+    border-color: rgb(var(--color-primary-500)) ;
+}
+
+.dark .card-modern {
+    background: rgb(var(--color-surface)) ;
+    border-color: rgb(var(--color-primary-400) / 0.2) ;
+}
+
+.dark .btn-ghost {
+    background: rgb(var(--color-surface)) ;
+    color: rgb(var(--color-primary-400)) ;
+    border-color: rgb(var(--color-primary-400) / 0.5) ;
+}
+
+.dark .btn-ghost:hover {
+    background: rgb(var(--color-primary-900) / 0.2) ;
+    color: rgb(var(--color-primary-300)) ;
+    border-color: rgb(var(--color-primary-400)) ;
+}

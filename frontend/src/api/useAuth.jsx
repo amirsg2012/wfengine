@@ -1,4 +1,4 @@
-// src/api/useAuth.jsx
+// src/api/useAuth.jsx - FIXED VERSION
 import { useState, useEffect, createContext, useContext } from 'react';
 import api from './client';
 
@@ -9,32 +9,42 @@ export function AuthProvider({ children }) {
     const [me, setMe] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Login function - returns success status
+    // Login function - FIXED to properly handle async flow
     const login = async (username, password) => {
         try {
             const response = await api.post('/auth/', { username, password });
             const { access, refresh } = response.data;
             
-            // Store tokens
+            // Store tokens first
             localStorage.setItem('access_token', access);
             localStorage.setItem('refresh_token', refresh);
             
-            // Update state
+            // Update state immediately
             setToken(access);
             
-            // Try to fetch user data, but don't fail if it doesn't work
+            // Wait a tick to ensure state update is processed
+            await new Promise(resolve => setTimeout(resolve, 0));
+            
+            // Now fetch user data with the new token
             try {
                 const meResponse = await api.get('/me/');
                 setMe(meResponse.data);
+                console.log('User data fetched successfully after login');
             } catch (meError) {
                 console.log('Could not fetch user data immediately after login:', meError);
-                // Don't logout - the token is valid even if /me/ fails
+                // Don't fail login if /me/ fails - the token is still valid
                 setMe(null);
             }
             
             return { success: true };
         } catch (error) {
             console.error('Login error:', error);
+            // Make sure to clear any partial state on login failure
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            setToken(null);
+            setMe(null);
+            
             return { 
                 success: false, 
                 error: error.response?.data?.detail || 'Login failed' 

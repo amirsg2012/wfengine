@@ -1,5 +1,5 @@
-// src/layout/Shell.jsx - WORKING VERSION
-import React, { useState, useRef, useEffect, Fragment } from 'react';
+// src/layout/Shell.jsx - FIXED VERSION
+import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
     Shield,
@@ -18,10 +18,9 @@ import {
     Sun, 
     Loader2
 } from 'lucide-react';
-import { Transition } from '@headlessui/react';
-import useAuth from '../api/useAuth'; // Use direct import, not useAuthSafe
+import useAuth from '../api/useAuth'; // Direct import as per working version
 
-// Theme Hook
+// Theme Hook - Simplified and safer
 function useTheme() {
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -45,7 +44,9 @@ function useTheme() {
 }
 
 export default function Shell() {
-    // State
+    console.log('Shell rendering'); // Debug log
+    
+    // State - simplified from working version
     const [navOpen, setNavOpen] = useState(false);
     const [confirmLogout, setConfirmLogout] = useState(false);
     const [isDarkMode, setIsDarkMode] = useTheme();
@@ -54,274 +55,310 @@ export default function Shell() {
     const nav = useNavigate();
     const { pathname } = useLocation();
     
-    // Direct auth hook usage - no safe wrapper
+    // Direct auth hook usage - following working version pattern
     const { token, me, loading: loadingMe, logout } = useAuth();
 
-    // Derived data
-    const name = me?.first_name && me?.last_name ? 
-        `${me.first_name} ${me.last_name}` : me?.username || '\u06a9\u0627\u0631\u0628\u0631';
+    // Derived data with safety checks
+    const name = me?.first_name && me?.last_name 
+        ? `${me.first_name} ${me.last_name}` 
+        : me?.username || 'کاربر';
     const email = me?.email || '';
     const avatar = name.charAt(0).toUpperCase();
 
-    // Handlers
-    const handleLogout = () => {
-        logout();
-        nav('/login', { replace: true });
-    };
-
+    // Navigation items
     const navigationItems = [
-        { to: '/inbox', icon: Inbox, label: '\u0635\u0646\u062f\u0648\u0642 \u0648\u0631\u0648\u062f\u06cc', badge: 3 },
-        { to: '/letters', icon: FileText, label: '\u062f\u0631\u062e\u0648\u0627\u0633\u062a\u200c\u0647\u0627' },
-        { to: '/reports', icon: BarChart2, label: '\u06af\u0632\u0627\u0631\u0634\u200c\u0647\u0627' },
-        { to: '/archive', icon: Archive, label: '\u0628\u0627\u06cc\u06af\u0627\u0646\u06cc' },
+        { to: '/inbox', icon: Inbox, label: 'صندوق ورودی', badge: 3 },
+        { to: '/letters', icon: FileText, label: 'درخواست‌ها' },
+        { to: '/reports', icon: BarChart2, label: 'گزارش‌ها' },
     ];
 
-    return (
-        <>
-            {/* Mobile Navigation Overlay */}
-            {navOpen && (
-                <div className="fixed inset-0 z-50 lg:hidden">
-                    {/* Backdrop */}
-                    <div 
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
-                        onClick={() => setNavOpen(false)}
-                    />
-                    
-                    {/* Sidebar */}
-                    <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-surface shadow-2xl">
-                        {/* Close button */}
-                        <div className="absolute top-4 left-4">
-                            <button 
-                                onClick={() => setNavOpen(false)}
-                                className="btn-ghost !p-2"
-                            >
-                                <X className="w-6 h-6 text-primary-600" />
-                            </button>
-                        </div>
-                        
-                        <SidebarContent 
-                            name={name}
-                            email={email}
-                            avatar={avatar}
-                            loading={loadingMe}
-                            onLogout={() => setConfirmLogout(true)}
-                            isDarkMode={isDarkMode}
-                            setIsDarkMode={setIsDarkMode}
-                            navigationItems={navigationItems}
-                            pathname={pathname}
-                            closeNav={() => setNavOpen(false)}
-                        />
-                    </div>
-                </div>
-            )}
+    // Handlers
+    const handleLogout = React.useCallback(() => {
+        try {
+            logout();
+            nav('/login', { replace: true });
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    }, [logout, nav]);
 
-            {/* Main Layout Container */}
-            <div className="min-h-screen bg-background">
-                {/* Desktop Layout Grid */}
-                <div className="hidden md:grid md:grid-cols-[280px_1fr]">
-                    {/* Desktop Sidebar */}
-                    <aside className="bg-surface border-l-2 border-primary-200 shadow-xl">
-                        <SidebarContent 
-                            name={name}
-                            email={email}
-                            avatar={avatar}
-                            loading={loadingMe}
-                            onLogout={() => setConfirmLogout(true)}
-                            isDarkMode={isDarkMode}
-                            setIsDarkMode={setIsDarkMode}
-                            navigationItems={navigationItems}
-                            pathname={pathname}
-                        />
-                    </aside>
-
-                    {/* Desktop Main Content */}
-                    <main className="p-6">
-                        <div className="bg-surface shadow-xl border-2 border-primary-200 rounded-2xl p-6">
-                            <Outlet />
-                        </div>
-                    </main>
-                </div>
-
-                {/* Mobile Layout */}
-                <div className="md:hidden">
-                    {/* Mobile Header */}
-                    <header className="bg-surface border-b-2 border-primary-200 shadow-lg flex items-center justify-between px-4 h-16">
-                        <button 
-                            onClick={() => setNavOpen(true)}
-                            className="btn-ghost !p-3"
-                        >
-                            <MenuIcon className="w-6 h-6 text-primary-600" />
-                        </button>
-                        
-                        <div className="flex items-center gap-3 font-bold">
-                            <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-white shadow-red">
-                                <Shield className="w-6 h-6" />
-                            </div>
-                            <span className="text-text-primary text-lg">\u0627\u062a\u0648\u0645\u0627\u0633\u06cc\u0648\u0646</span>
-                        </div>
-                        
-                        <div 
-                            className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer shadow-red hover:bg-primary-600 transition-all duration-200" 
-                            onClick={() => nav('/profile')}
-                        >
-                            {loadingMe ? 
-                                <Loader2 className="w-5 h-5 animate-spin"/> : 
-                                <span className="text-lg">{avatar}</span>
-                            }
-                        </div>
-                    </header>
-
-                    {/* Mobile Main Content */}
-                    <main className="p-4 pt-6">
-                        <div className="bg-surface shadow-xl border-2 border-primary-200 rounded-2xl p-4">
-                            <Outlet />
-                        </div>
-                    </main>
-                </div>
-            </div>
-
-            {/* Logout Confirmation Modal */}
-            {confirmLogout && (
-                <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-                    <div 
-                        className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
-                        onClick={() => setConfirmLogout(false)} 
-                    />
-                    <div className="relative bg-surface rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center border-2 border-primary-200">
-                        <h3 className="text-xl font-bold text-text-primary mb-3">\u062a\u0623\u06cc\u06cc\u062f \u062e\u0631\u0648\u062c</h3>
-                        <p className="text-base text-text-secondary mb-8 font-medium">\u0622\u06cc\u0627 \u0627\u0632 \u062e\u0631\u0648\u062c \u0627\u0632 \u0633\u06cc\u0633\u062a\u0645 \u0627\u0637\u0645\u06cc\u0646\u0627\u0646 \u062f\u0627\u0631\u06cc\u062f\u061f</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <button 
-                                onClick={() => setConfirmLogout(false)} 
-                                className="btn-ghost !py-3"
-                            >
-                                \u0627\u0646\u0635\u0631\u0627\u0641
-                            </button>
-                            <button 
-                                onClick={() => { handleLogout(); setConfirmLogout(false); }} 
-                                className="btn-primary !bg-error-500 hover:!bg-error-600 !py-3"
-                            >
-                                \u062a\u0623\u06cc\u06cc\u062f
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
-    );
-}
-
-// Sidebar Content Component
-function SidebarContent({ name, email, avatar, loading, onLogout, isDarkMode, setIsDarkMode, navigationItems, pathname, closeNav }) {
-    return (
-        <div className="flex flex-col bg-surface text-text-primary h-screen">
-            {/* Header */}
-            <div className="p-6 border-b-2 border-primary-200">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-red">
-                        <Shield className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                        <h2 className="font-bold text-xl text-text-primary">\u0627\u062a\u0648\u0645\u0627\u0633\u06cc\u0648\u0646</h2>
-                        <p className="text-sm text-text-secondary font-medium">\u0633\u06cc\u0633\u062a\u0645 \u0645\u062f\u06cc\u0631\u06cc\u062a \u0627\u0633\u0646\u0627\u062f</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* User Profile */}
-            <UserProfile
-                name={name}
-                email={email}
-                avatar={avatar}
-                loading={loading}
-                onLogout={onLogout}
-                isDarkMode={isDarkMode}
-                setIsDarkMode={setIsDarkMode}
-            />
-
-            {/* Navigation */}
-            <nav className="flex-1 p-6 space-y-3">
-                <div className="mb-6">
-                    <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-4 px-3">
-                        \u0645\u0646\u0648\u06cc \u0627\u0635\u0644\u06cc
-                    </h3>
-                    {navigationItems.map((item) => (
-                        <SideNavItem
-                            key={item.to}
-                            to={item.to}
-                            icon={item.icon}
-                            label={item.label}
-                            badge={item.badge}
-                            active={pathname === item.to}
-                            closeNav={closeNav}
-                        />
-                    ))}
-                </div>
-            </nav>
-
-            {/* Footer */}
-            <div className="p-6 border-t-2 border-primary-200">
-                <button 
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-primary-50 rounded-xl transition-all duration-200 border-2 border-transparent hover:border-primary-200"
-                    style={{ cursor: 'pointer' }}
-                >
-                    <HelpCircle className="w-5 h-5 text-primary-500" />
-                    <span>\u0631\u0627\u0647\u0646\u0645\u0627 \u0648 \u067e\u0634\u062a\u06cc\u0628\u0627\u0646\u06cc</span>
-                </button>
-            </div>
-        </div>
-    );
-}
-
-// User Profile Component
-function UserProfile({ name, email, avatar, loading, onLogout, isDarkMode, setIsDarkMode }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const menuRef = useRef(null);
-    const nav = useNavigate();
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const menuItems = [
-        { label: '\u067e\u0631\u0648\u0641\u0627\u06cc\u0644 \u06a9\u0627\u0631\u0628\u0631\u06cc', icon: User, action: () => nav('/profile') },
-        { label: '\u062a\u0646\u0638\u06cc\u0645\u0627\u062a', icon: Settings, action: () => nav('/settings') },
-        { label: '\u062e\u0631\u0648\u062c', icon: LogOut, action: onLogout, isDanger: true },
-    ];
-
-    if (loading) {
+    // Loading state
+    if (loadingMe) {
         return (
-            <div className="p-6">
-                <div className="flex items-center gap-3 p-3">
-                    <div className="w-14 h-14 bg-primary-100 animate-pulse rounded-full"></div>
-                    <div className="flex-1">
-                        <div className="h-4 bg-primary-100 animate-pulse rounded mb-1"></div>
-                        <div className="h-3 bg-primary-50 animate-pulse rounded w-2/3"></div>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-3d-lg">
+                        <Loader2 className="w-8 h-8 text-white animate-spin" />
                     </div>
+                    <p className="text-text-secondary font-medium">در حال بارگذاری...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="p-6" ref={menuRef}>
+        <div className="min-h-screen bg-background">
+            {/* Mobile Navigation Overlay */}
+            {navOpen && (
+                <div className="fixed inset-0 z-50 lg:hidden">
+                    <div 
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+                        onClick={() => setNavOpen(false)}
+                    />
+                    <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-surface shadow-3d-2xl">
+                        <div className="absolute top-4 left-4">
+                            <button 
+                                onClick={() => setNavOpen(false)}
+                                className="p-2 rounded-xl hover:bg-primary-50 transition-colors shadow-3d-sm"
+                            >
+                                <X className="w-6 h-6 text-primary-600" />
+                            </button>
+                        </div>
+                        <MobileSidebar 
+                            userName={name}
+                            userEmail={email}
+                            userAvatar={avatar}
+                            navigationItems={navigationItems}
+                            pathname={pathname}
+                            onLogout={() => setConfirmLogout(true)}
+                            onNavClick={() => setNavOpen(false)}
+                            isDarkMode={isDarkMode}
+                            onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Desktop Layout */}
+            <div className="hidden md:grid md:grid-cols-[280px_1fr] min-h-screen">
+                {/* Desktop Sidebar */}
+                <aside className="bg-surface border-l-2 border-primary-200 shadow-3d-xl">
+                    <DesktopSidebar 
+                        userName={name}
+                        userEmail={email}
+                        userAvatar={avatar}
+                        navigationItems={navigationItems}
+                        pathname={pathname}
+                        onLogout={() => setConfirmLogout(true)}
+                        isDarkMode={isDarkMode}
+                        onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+                        onNavigateToProfile={() => nav('/profile')}
+                        onNavigateToSettings={() => nav('/settings')}
+                    />
+                </aside>
+
+                {/* Desktop Main Content */}
+                <main className="p-6 overflow-auto">
+                    <div className="bg-surface shadow-3d-xl border-2 border-primary-200 rounded-2xl p-6 min-h-full">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
+
+            {/* Mobile Layout */}
+            <div className="md:hidden min-h-screen flex flex-col">
+                {/* Mobile Header */}
+                <header className="bg-surface border-b-2 border-primary-200 shadow-3d-lg flex items-center justify-between px-4 h-16 flex-shrink-0">
+                    <button 
+                        onClick={() => setNavOpen(true)}
+                        className="p-3 rounded-xl hover:bg-primary-50 transition-colors shadow-3d-sm"
+                    >
+                        <MenuIcon className="w-6 h-6 text-primary-600" />
+                    </button>
+                    
+                    <div className="flex items-center gap-3 font-bold">
+                        <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-white shadow-3d-md">
+                            <Shield className="w-6 h-6" />
+                        </div>
+                        <span className="text-text-primary text-lg">اتوماسیون</span>
+                    </div>
+                    
+                    <button 
+                        onClick={() => nav('/profile')}
+                        className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold hover:bg-primary-600 transition-colors shadow-3d-md"
+                    >
+                        <span className="text-lg">{avatar}</span>
+                    </button>
+                </header>
+
+                {/* Mobile Main Content */}
+                <main className="flex-1 p-4 pt-6 overflow-auto">
+                    <div className="bg-surface shadow-3d-xl border-2 border-primary-200 rounded-2xl p-4 min-h-full">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
+
+            {/* Logout Confirmation Modal */}
+            {confirmLogout && (
+                <LogoutModal 
+                    onConfirm={() => {
+                        handleLogout();
+                        setConfirmLogout(false);
+                    }}
+                    onCancel={() => setConfirmLogout(false)}
+                />
+            )}
+        </div>
+    );
+}
+
+// Desktop Sidebar Component
+function DesktopSidebar({ 
+    userName, userEmail, userAvatar, navigationItems, pathname, 
+    onLogout, isDarkMode, onThemeToggle, onNavigateToProfile, onNavigateToSettings 
+}) {
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setUserMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="p-6 border-b-2 border-primary-200 flex-shrink-0">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-3d-lg">
+                        <Shield className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="font-bold text-xl text-text-primary">اتوماسیون</h2>
+                        <p className="text-sm text-text-secondary font-medium">سیستم مدیریت اسناد</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* User Profile Section */}
+            <div className="p-6 flex-shrink-0" ref={menuRef}>
+                <UserProfileMenu
+                    userName={userName}
+                    userEmail={userEmail}
+                    userAvatar={userAvatar}
+                    isOpen={userMenuOpen}
+                    onToggle={() => setUserMenuOpen(!userMenuOpen)}
+                    onNavigateToProfile={onNavigateToProfile}
+                    onNavigateToSettings={onNavigateToSettings}
+                    onLogout={onLogout}
+                    isDarkMode={isDarkMode}
+                    onThemeToggle={onThemeToggle}
+                />
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 p-6 overflow-auto">
+                <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-4 px-3">
+                        منوی اصلی
+                    </h3>
+                    {navigationItems.map((item) => (
+                        <NavigationItem
+                            key={item.to}
+                            to={item.to}
+                            icon={item.icon}
+                            label={item.label}
+                            badge={item.badge}
+                            isActive={pathname === item.to}
+                        />
+                    ))}
+                </div>
+            </nav>
+
+            {/* Footer */}
+            <div className="p-6 border-t-2 border-primary-200 flex-shrink-0">
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-primary-50 rounded-xl transition-colors border-2 border-transparent hover:border-primary-200">
+                    <HelpCircle className="w-5 h-5 text-primary-500" />
+                    <span>راهنما و پشتیبانی</span>
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// Mobile Sidebar Component
+function MobileSidebar({ 
+    userName, userEmail, userAvatar, navigationItems, pathname, 
+    onLogout, onNavClick, isDarkMode, onThemeToggle 
+}) {
+    return (
+        <div className="flex flex-col h-full pt-16">
+            {/* User Profile */}
+            <div className="p-6 border-b-2 border-primary-200 flex-shrink-0">
+                <div className="flex items-center gap-4 p-4 bg-primary-50 rounded-xl">
+                    <div className="w-14 h-14 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-3d-lg">
+                        {userAvatar}
+                    </div>
+                    <div className="flex-1">
+                        <div className="font-bold text-text-primary text-base">{userName}</div>
+                        <div className="text-sm text-text-secondary font-medium">{userEmail}</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 p-6 overflow-auto">
+                <div className="space-y-3">
+                    {navigationItems.map((item) => (
+                        <NavigationItem
+                            key={item.to}
+                            to={item.to}
+                            icon={item.icon}
+                            label={item.label}
+                            badge={item.badge}
+                            isActive={pathname === item.to}
+                            onClick={onNavClick}
+                        />
+                    ))}
+                </div>
+            </nav>
+
+            {/* Mobile Actions */}
+            <div className="p-6 border-t-2 border-primary-200 space-y-3 flex-shrink-0">
+                <button
+                    onClick={onThemeToggle}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-primary-50 rounded-xl transition-colors"
+                >
+                    {isDarkMode ? <Sun className="w-5 h-5 text-warning-500" /> : <Moon className="w-5 h-5 text-primary-500" />}
+                    <span>{isDarkMode ? 'حالت روشن' : 'حالت تاریک'}</span>
+                </button>
+                <button
+                    onClick={onLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-error-600 hover:bg-error-50 rounded-xl transition-colors"
+                >
+                    <LogOut className="w-5 h-5 text-error-500" />
+                    <span>خروج</span>
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// User Profile Menu Component
+function UserProfileMenu({
+    userName, userEmail, userAvatar, isOpen, onToggle,
+    onNavigateToProfile, onNavigateToSettings, onLogout,
+    isDarkMode, onThemeToggle
+}) {
+    return (
+        <>
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center gap-4 p-4 hover:bg-primary-50 rounded-xl transition-all duration-200 group border-2 border-transparent hover:border-primary-200"
-                style={{ cursor: 'pointer' }}
+                onClick={onToggle}
+                className="w-full flex items-center gap-4 p-4 hover:bg-primary-50 rounded-xl transition-colors group border-2 border-transparent hover:border-primary-200"
             >
-                <div className="w-14 h-14 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-red group-hover:shadow-red-lg group-hover:scale-105 transition-all duration-200">
-                    {avatar}
+                <div className="w-14 h-14 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-3d-lg group-hover:scale-105 transition-transform">
+                    {userAvatar}
                 </div>
                 <div className="flex-1 text-right">
-                    <div className="font-bold text-text-primary text-base">{name}</div>
-                    <div className="text-sm text-text-secondary font-medium">{email}</div>
+                    <div className="font-bold text-text-primary text-base">{userName}</div>
+                    <div className="text-sm text-text-secondary font-medium">{userEmail}</div>
                 </div>
                 <ChevronDown 
                     className={`w-6 h-6 text-primary-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
@@ -329,69 +366,72 @@ function UserProfile({ name, email, avatar, loading, onLogout, isDarkMode, setIs
             </button>
 
             {isOpen && (
-                <ul className="mt-3 bg-surface border-2 border-primary-200 rounded-xl shadow-xl overflow-hidden">
-                    {menuItems.map((item, index) => (
-                        <li key={index}>
-                            <button
-                                onClick={() => {
-                                    item.action();
-                                    setIsOpen(false);
-                                }}
-                                className={`w-full flex items-center gap-4 px-5 py-4 text-sm font-medium hover:bg-primary-50 transition-colors border-b border-primary-100 last:border-b-0 ${
-                                    item.isDanger ? 'text-error-600 hover:bg-error-50 hover:text-error-700' : 'text-text-primary'
-                                }`}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <item.icon className={`w-5 h-5 ${item.isDanger ? 'text-error-500' : 'text-primary-500'}`} />
-                                <span>{item.label}</span>
-                            </button>
-                        </li>
-                    ))}
-                    <li>
-                        <button
-                            onClick={() => setIsDarkMode(!isDarkMode)}
-                            className="w-full flex items-center gap-4 px-5 py-4 text-sm font-medium text-text-primary hover:bg-primary-50 transition-colors"
-                            style={{ cursor: 'pointer' }}
-                        >
-                            {isDarkMode ? 
-                                <Sun className="w-5 h-5 text-warning-500" /> : 
-                                <Moon className="w-5 h-5 text-primary-500" />
-                            }
-                            <span>{isDarkMode ? '\u062d\u0627\u0644\u062a \u0631\u0648\u0634\u0646' : '\u062d\u0627\u0644\u062a \u062a\u0627\u0631\u06cc\u06a9'}</span>
-                        </button>
-                    </li>
-                </ul>
+                <div className="mt-3 bg-surface border-2 border-primary-200 rounded-xl shadow-3d-xl overflow-hidden">
+                    <button
+                        onClick={() => {
+                            onNavigateToProfile();
+                            onToggle();
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-4 text-sm font-medium text-text-primary hover:bg-primary-50 transition-colors border-b border-primary-100"
+                    >
+                        <User className="w-5 h-5 text-primary-500" />
+                        <span>پروفایل کاربری</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            onNavigateToSettings();
+                            onToggle();
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-4 text-sm font-medium text-text-primary hover:bg-primary-50 transition-colors border-b border-primary-100"
+                    >
+                        <Settings className="w-5 h-5 text-primary-500" />
+                        <span>تنظیمات</span>
+                    </button>
+                    <button
+                        onClick={onThemeToggle}
+                        className="w-full flex items-center gap-4 px-5 py-4 text-sm font-medium text-text-primary hover:bg-primary-50 transition-colors border-b border-primary-100"
+                    >
+                        {isDarkMode ? <Sun className="w-5 h-5 text-warning-500" /> : <Moon className="w-5 h-5 text-primary-500" />}
+                        <span>{isDarkMode ? 'حالت روشن' : 'حالت تاریک'}</span>
+                    </button>
+                    <button
+                        onClick={onLogout}
+                        className="w-full flex items-center gap-4 px-5 py-4 text-sm font-medium text-error-600 hover:bg-error-50 hover:text-error-700 transition-colors"
+                    >
+                        <LogOut className="w-5 h-5 text-error-500" />
+                        <span>خروج</span>
+                    </button>
+                </div>
             )}
-        </div>
+        </>
     );
 }
 
 // Navigation Item Component
-function SideNavItem({ to, icon: Icon, label, badge, active, closeNav }) {
+function NavigationItem({ to, icon: Icon, label, badge, isActive, onClick }) {
     const handleClick = () => {
-        if (closeNav) closeNav(); // Close mobile nav when item is clicked
+        if (onClick) onClick();
     };
 
     return (
         <NavLink
             to={to}
             onClick={handleClick}
-            className={({ isActive }) =>
-                `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 relative font-medium border-2 ${
-                    isActive 
-                        ? 'bg-primary-500 text-white font-bold shadow-red border-primary-600' 
+            className={({ isActive: navIsActive }) =>
+                `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 font-medium border-2 ${
+                    navIsActive || isActive
+                        ? 'bg-primary-500 text-white font-bold shadow-3d-lg border-primary-600' 
                         : 'hover:bg-primary-50 text-text-secondary hover:text-text-primary border-transparent hover:border-primary-200'
                 }`
             }
-            style={{ cursor: 'pointer' }}
         >
-            {({ isActive }) => (
+            {({ isActive: navIsActive }) => (
                 <>
-                    <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-primary-500'}`} />
+                    <Icon className={`w-6 h-6 ${navIsActive || isActive ? 'text-white' : 'text-primary-500'}`} />
                     <span className="flex-1">{label}</span>
                     {badge && (
                         <div className={`text-xs font-bold px-3 py-1 rounded-xl shadow-sm ${
-                            isActive 
+                            navIsActive || isActive
                                 ? 'bg-white text-primary-500' 
                                 : 'bg-error-500 text-white'
                         }`}>
@@ -401,5 +441,35 @@ function SideNavItem({ to, icon: Icon, label, badge, active, closeNav }) {
                 </>
             )}
         </NavLink>
+    );
+}
+
+// Logout Modal Component
+function LogoutModal({ onConfirm, onCancel }) {
+    return (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+            <div 
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+                onClick={onCancel} 
+            />
+            <div className="relative bg-surface rounded-2xl shadow-3d-2xl p-8 w-full max-w-sm text-center border-2 border-primary-200">
+                <h3 className="text-xl font-bold text-text-primary mb-3">تأیید خروج</h3>
+                <p className="text-base text-text-secondary mb-8 font-medium">آیا از خروج از سیستم اطمینان دارید؟</p>
+                <div className="grid grid-cols-2 gap-4">
+                    <button 
+                        onClick={onCancel} 
+                        className="px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-primary-50 rounded-xl transition-colors border-2 border-primary-200"
+                    >
+                        انصراف
+                    </button>
+                    <button 
+                        onClick={onConfirm} 
+                        className="px-4 py-3 text-sm font-medium bg-error-500 hover:bg-error-600 text-white rounded-xl transition-colors shadow-3d-md"
+                    >
+                        تأیید
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
