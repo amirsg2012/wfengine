@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django_fsm_log",
     "apps.accounts.apps.AccountsConfig",
-    "apps.letters.apps.LettersConfig",
+    "apps.workflows.apps.WorkflowsConfig",
     "apps.integrations.apps.IntegrationsConfig",
     'apps.admin.apps.AdminConfig',
 ]

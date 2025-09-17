@@ -11,8 +11,8 @@ import json
 import csv
 
 from apps.accounts.models import OrgRole, OrgRoleGroup, Membership
-from apps.letters.models import Letter
-from apps.letters.workflow_spec import ADVANCER_STEPS, STATE_ORDER
+from apps.workflows.models import Workflow
+from apps.workflows.workflow_spec import ADVANCER_STEPS, STATE_ORDER
 from .models import SystemLog
 from .serializers import SystemLogSerializer
 
@@ -28,8 +28,8 @@ class AdminStatsView(APIView):
         
         # Calculate stats
         total_users = User.objects.count()
-        active_workflows = Letter.objects.exclude(state='Settlment').count()
-        pending_approvals = Letter.objects.filter(
+        active_workflows = Workflow.objects.exclude(state='Settlment').count()
+        pending_approvals = Workflow.objects.filter(
             # Add logic for pending approvals based on your workflow
         ).count()
         

@@ -1,4 +1,4 @@
-# apps/letters/workflow_spec.py
+# apps/workflows/workflow_spec.py
 STATE_ORDER = [
     "ApplicantRequest",
     "CEOInstruction",

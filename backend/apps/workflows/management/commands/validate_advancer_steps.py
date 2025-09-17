@@ -1,7 +1,7 @@
 # apps/letters/management/commands/validate_advancer_steps.py
 from django.core.management.base import BaseCommand, CommandError
 from apps.accounts.models import OrgRole
-from apps.letters.workflow_spec import ADVANCER_STEPS, STATE_ORDER
+from apps.workflows.workflow_spec import ADVANCER_STEPS, STATE_ORDER
 
 class Command(BaseCommand):
     help = "Validate that every role code in ADVANCER_STEPS exists in OrgRole."

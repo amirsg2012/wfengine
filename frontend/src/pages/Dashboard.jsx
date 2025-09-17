@@ -16,7 +16,7 @@ export default function Dashboard() {
         return (
             <div className="p-8 text-center">
                 <p className="text-error-500 mb-4">{error}</p>
-                <button onClick={refresh} className="btn-primary">\u062a\u0644\u0627\u0634 \u0645\u062c\u062f\u062f</button>
+                <button onClick={refresh} className="btn-primary">تلاش مجدد</button>
             </div>
         );
     }

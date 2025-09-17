@@ -19,7 +19,7 @@ export default function useInbox() {
             setError(null);
 
             // Fetch letters for inbox (pending user action)
-            const inboxResponse = await api.get('/letters/', {
+            const inboxResponse = await api.get('/workflows/', {
                 params: {
                     can_approve: true,
                     limit: 10,
@@ -28,13 +28,13 @@ export default function useInbox() {
             });
 
             // Fetch stats
-            const statsResponse = await api.get('/letters/stats/');
+            const statsResponse = await api.get('/workflows/stats/');
 
             setInboxData(inboxResponse.data.results || []);
             setStats(statsResponse.data || stats);
         } catch (err) {
             console.error('Error fetching inbox data:', err);
-            setError(err.response?.data?.detail || '\u062e\u0637\u0627 \u062f\u0631 \u062f\u0631\u06cc\u0627\u0641\u062a \u0627\u0637\u0644\u0627\u0639\u0627\u062a');
+            setError(err.response?.data?.detail || 'خطا در دریافت اطلاعات');
         } finally {
             setLoading(false);
         }
@@ -46,7 +46,7 @@ export default function useInbox() {
 
     const approveWorkflow = async (letterId) => {
         try {
-            await api.post(`/letters/${letterId}/approve/`);
+            await api.post(`/workflows/${letterId}/approve/`);
             // Refresh data after approval
             await fetchInboxData();
             return { success: true };
@@ -54,7 +54,7 @@ export default function useInbox() {
             console.error('Error approving workflow:', err);
             return { 
                 success: false, 
-                error: err.response?.data?.detail || '\u062e\u0637\u0627 \u062f\u0631 \u062a\u0627\u06cc\u06cc\u062f \u062f\u0631\u062e\u0648\u0627\u0633\u062a' 
+                error: err.response?.data?.detail || 'خطا در تایید درخواست' 
             };
         }
     };

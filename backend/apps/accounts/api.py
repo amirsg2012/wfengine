@@ -1,11 +1,12 @@
+# apps/accounts/api.py
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.accounts.models import Membership
+from apps.accounts.models import Membership, OrgRoleGroup, OrgRole
 
 
 class AuthView(APIView):
@@ -54,3 +55,17 @@ class MeView(APIView):
             "roles": roles                              # full labels for UI
         }
         return Response(payload)
+    # Admin ViewSets for managing organization structure
+class OrgRoleGroupViewSet(viewsets.ModelViewSet):
+    queryset = OrgRoleGroup.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+
+class OrgRoleViewSet(viewsets.ModelViewSet):  
+    queryset = OrgRole.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+
+class MembershipViewSet(viewsets.ModelViewSet):
+    queryset = Membership.objects.all()  
+    permission_classes = [permissions.IsAdminUser]

@@ -3,7 +3,7 @@ from django.db.models.signals import post_save, post_delete
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from apps.letters.models import Letter
+from apps.workflows.models import Workflow
 from .models import create_system_log
 
 User = get_user_model()
@@ -35,7 +35,7 @@ def log_user_logout(sender, request, user, **kwargs):
             ip_address=ip_address
         )
 
-@receiver(post_save, sender=Letter)
+@receiver(post_save, sender=Workflow)
 def log_letter_changes(sender, instance, created, **kwargs):
     """Log letter creation and updates"""
     if created:
