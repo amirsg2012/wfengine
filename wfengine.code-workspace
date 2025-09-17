@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "Backend (Django)",
+			"path": "backend"
+		},
+		{
+			"name": "Frontend (React)",
+			"path": "frontend"
+		},
+		{
+			"name": "src",
+			"path": "."
+		}
+	],
+	"settings": {}
+}

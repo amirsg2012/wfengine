@@ -1,0 +1,17 @@
+{
+  "name": "my-fullstack-app",
+  "version": "1.0.0",
+  "description": "My Django and React Monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend" 
+  ],
+  "scripts": {
+    "dev:frontend": "npm run start -w frontend",
+    "dev:backend": "pipenv run python backend/manage.py runserver",
+    "install:frontend": "npm install -w frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
