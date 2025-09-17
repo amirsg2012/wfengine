@@ -5,7 +5,6 @@ import useInbox from '../api/useInbox';
 
 // Import your components
 import StatWidget from '../components/dashboard/StatWidget';
-import CreateRequestWidget from '../components/dashboard/CreateRequestWidget';
 import QuickActions from '../components/dashboard/QuickActions';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import InboxWidget from '../components/dashboard/InboxWidget';
@@ -80,7 +79,6 @@ export default function Dashboard() {
 
                 {/* Right Column */}
                 <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-                    <CreateRequestWidget />
                     <QuickActions />
                     <RecentActivity activities={stats?.recent_activity || []} />
                 </div>

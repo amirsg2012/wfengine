@@ -1,7 +1,10 @@
 /* src/styles.css - ENHANCED RED GRADIENT THEME WITH 3D EFFECTS */
 
 /* 1. Import Tailwind CSS v4 */
-@import "tailwindcss";
+/* Correct */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 2. RED GRADIENT THEME VARIABLES */
 :root {

@@ -1,0 +1,154 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:latest
+    container_name: workflow_mongodb_dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: office
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - workflow_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: workflow_minio_dev
+    restart: unless-stopped
+    ports:
+      - "9000:9000"      # API port
+      - "9001:9001"      # Console port
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+      MINIO_DEFAULT_BUCKETS: letters
+    volumes:
+      - minio_data:/data
+    networks:
+      - workflow_network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: workflow_backend_dev
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_DB: office
+      MONGO_USER: office_user
+      MONGO_PASSWORD: office_pass
+      
+      # MinIO
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: letters
+      MINIO_USE_SSL: "0"
+      
+      # Django
+      DEBUG: "1"
+      DJANGO_SECRET_KEY: "dev-secret-key-change-in-production"
+      ALLOWED_HOSTS: "*"
+      JWT_AUTH_SECRET: "jwt-dev-secret-change-in-production"
+      
+      # CORS
+      CORS_ALLOW_ALL_ORIGINS: "True"
+    volumes:
+      - ./backend:/app
+      - backend_static:/app/static
+    networks:
+      - workflow_network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for MongoDB to be ready...' &&
+        sleep 10 &&
+        echo 'Running migrations...' &&
+        python manage.py migrate &&
+        echo 'Creating organizational structure...' &&
+        python manage.py bootstrap_org_roles --with-demo-users &&
+        echo 'Creating superuser...' &&
+        echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@workflow.local', 'admin')\" | python manage.py shell &&
+        echo 'Collecting static files...' &&
+        python manage.py collectstatic --noinput &&
+        echo 'Starting development server...' &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: workflow_frontend_dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - workflow_network
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+
+  # MinIO Client (for bucket setup)
+  minio-setup:
+    image: minio/mc:latest
+    container_name: workflow_minio_setup
+    networks:
+      - workflow_network
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minio minio123;
+      /usr/bin/mc mb myminio/letters --ignore-existing;
+      /usr/bin/mc policy set public myminio/letters;
+      exit 0;
+      "
+
+volumes:
+  mongodb_data:
+    driver: local
+  minio_data:
+    driver: local
+  backend_static:
+    driver: local
+
+networks:
+  workflow_network:
+    driver: bridge

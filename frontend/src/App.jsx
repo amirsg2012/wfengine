@@ -8,9 +8,8 @@ import Dashboard from './pages/Dashboard';
 import WorkflowList from './pages/WorkflowList';
 import WorkflowCreate from './pages/WorkflowCreate';
 import WorkflowDetail from './pages/WorkflowDetail';
-import Reports from './pages/Reports';
-import Archive from './pages/Archive';
 import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './api/useAuth';
 import useAuth from './api/useAuth';
 import './App.css';
 
@@ -54,8 +53,6 @@ function AppContent() {
                 <Route path="letters" element={<WorkflowList />} />
                 <Route path="letters/create" element={<WorkflowCreate />} />
                 <Route path="letters/:id" element={<WorkflowDetail />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="archive" element={<Archive />} />
             </Route>
             
             {/* Catch-all redirect */}
@@ -67,9 +64,11 @@ function AppContent() {
 function App() {
     return (
         <QueryClientProvider client={queryClient}>
-            <Router>
-                <AppContent />
-            </Router>
+            <AuthProvider>
+                <Router>
+                    <AppContent />
+                </Router>
+            </AuthProvider>
         </QueryClientProvider>
     );
 }

@@ -1,0 +1,21 @@
+# frontend/Dockerfile.dev
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+# Use npm install instead of npm ci for development to handle package-lock.json sync issues
+RUN npm install
+
+# Copy project files
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Command will be overridden in docker-compose
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

@@ -4,14 +4,18 @@
   "description": "My Django and React Monorepo",
   "private": true,
   "workspaces": [
-    "frontend" 
+    "frontend"
   ],
   "scripts": {
-    "dev:frontend": "npm run start -w frontend",
+    "dev:frontend": "npm run dev -w frontend",
     "dev:backend": "pipenv run python backend/manage.py runserver",
     "install:frontend": "npm install -w frontend"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "prop-types": "^15.8.1",
+    "react-modern-calendar-datepicker": "^3.1.6"
+  }
 }

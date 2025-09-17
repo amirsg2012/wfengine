@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: workflow_mongodb_dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: office
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - workflow_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:RELEASE.2024-09-13T20-26-02Z
+    container_name: workflow_minio_dev
+    restart: unless-stopped
+    ports:
+      - "9000:9000"      # API port
+      - "9001:9001"      # Console port
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+      MINIO_DEFAULT_BUCKETS: letters
+    volumes:
+      - minio_data:/data
+    networks:
+      - workflow_network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+  # MinIO Client (for bucket setup)
+  minio-setup:
+    image: minio/mc:RELEASE.2024-09-05T11-29-39Z
+    container_name: workflow_minio_setup
+    networks:
+      - workflow_network
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minio minio123;
+      /usr/bin/mc mb myminio/letters --ignore-existing;
+      /usr/bin/mc policy set public myminio/letters;
+      exit 0;
+      "
+
+volumes:
+  mongodb_data:
+    driver: local
+  minio_data:
+    driver: local
+
+
+networks:
+  workflow_network:
+    driver: bridge
