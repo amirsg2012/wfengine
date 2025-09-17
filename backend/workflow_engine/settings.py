@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.letters.apps.LettersConfig",
     "apps.integrations.apps.IntegrationsConfig",
+    'apps.admin.apps.AdminConfig',
 ]
 
 

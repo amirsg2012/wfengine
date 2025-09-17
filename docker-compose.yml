@@ -112,7 +112,7 @@ services:
     container_name: workflow_frontend_dev
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3000:5173"
     environment:
       VITE_API_BASE_URL: http://localhost:8000/api
     volumes:

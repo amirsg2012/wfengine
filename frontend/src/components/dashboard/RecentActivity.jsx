@@ -104,7 +104,7 @@ export default function RecentActivity() {
     const fetchRecentActivities = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/letters/recent-activity/', {
+            const response = await api.get('/letters/recent_activity/', {
                 params: { limit: 10 }
             });
             setActivities(response.data.results || []);
