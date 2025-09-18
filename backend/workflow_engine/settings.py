@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework.authtoken",
-    "django_fsm_log",
+    # "django_fsm_log",
     "apps.accounts.apps.AccountsConfig",
     "apps.workflows.apps.WorkflowsConfig",
     "apps.integrations.apps.IntegrationsConfig",

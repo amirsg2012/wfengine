@@ -207,6 +207,7 @@ export default function WorkflowDetail() {
     const [activeTab, setActiveTab] = useState('details');
     const [showSensitive, setShowSensitive] = useState(false);
     const [approving, setApproving] = useState(false);
+    const [workflowStatus, setWorkflowStatus] = useState(null); // ✅ NEW: Separate status state
 
     // State progression order
     const stateProgression = [
@@ -228,6 +229,7 @@ export default function WorkflowDetail() {
 
     useEffect(() => {
         fetchLetter();
+        fetchWorkflowStatus();
     }, [id]);
 
     const fetchLetter = async () => {
@@ -242,19 +244,50 @@ export default function WorkflowDetail() {
         }
     };
 
+    // ✅ NEW: Fetch accurate workflow status including can_approve
+    const fetchWorkflowStatus = async () => {
+        try {
+            const response = await api.get(`/workflows/${id}/status/`);
+            setWorkflowStatus(response.data);
+        } catch (err) {
+            console.error('Error fetching workflow status:', err);
+            // Don't set error here as the main workflow fetch might still succeed
+        }
+    };
+
     const handleApprove = async () => {
-        if (!letter?.can_approve) return;
+        // ✅ IMPROVED: Use workflowStatus for accurate can_approve check
+        const canApprove = workflowStatus?.can_approve || false;
+        if (!canApprove) {
+            console.warn('User cannot approve this workflow');
+            return;
+        }
         
         try {
             setApproving(true);
-            await api.post(`/workflows/${id}/perform_action/`, { data: "approve" });
-            await fetchLetter(); // Refresh data
+            // ✅ IMPROVED: Use correct parameter name
+            const response = await api.post(`/workflows/${id}/perform_action/`, { 
+                action: "APPROVE" 
+            });
+            
+            if (response.data?.error) {
+                console.error('Approval failed:', response.data.message);
+                // Handle error (could add toast notification here)
+            } else {
+                // ✅ IMPROVED: Refresh both letter and status
+                await Promise.all([fetchLetter(), fetchWorkflowStatus()]);
+            }
         } catch (err) {
             console.error('Approval failed:', err);
             // Handle error (could add toast notification here)
         } finally {
             setApproving(false);
         }
+    };
+
+    // ✅ IMPROVED: Use workflowStatus for approval permission checks
+    const canUserApprove = () => {
+        return workflowStatus?.can_approve || false;
     };
 
     // Determine form accessibility based on current state
@@ -339,19 +372,15 @@ export default function WorkflowDetail() {
                 <span>{showSensitive ? 'مخفی کردن' : 'نمایش'} اطلاعات حساس</span>
             </button>
             
-            {letter.can_approve && (
-                <button
+           
+
+            {canUserApprove() && (
+                <button 
                     onClick={handleApprove}
                     disabled={approving}
-                    className="btn-primary flex items-center gap-2"
+                    className="btn-primary mb-4"
                 >
-                    {approving ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                        <Check className="w-4 h-4" />
-                    )}
-                    <span>{approving ? 'در حال تایید...' : 'پیشبرد'}</span>
-                    <ChevronRight className="w-4 h-4" />
+                    {approving ? 'در حال تایید...' : 'تایید درخواست'}
                 </button>
             )}
         </div>

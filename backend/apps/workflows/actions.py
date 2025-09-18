@@ -81,7 +81,7 @@ def perform_action(workflow, user, action_type: str, data: dict = None) -> dict:
         if not can_user_satisfy_step(user, state, idx):
             return {"error": "forbidden", "needed_roles": step_roles(state, idx)}
 
-        # choose one intersecting role (we already know intersection is non-empty)
+        # choose one intersecting role
         role_intersection = list(set(user_role_codes(user)) & set(step_roles(state, idx)))
         role_code = role_intersection[0] if role_intersection else None
 
@@ -96,11 +96,18 @@ def perform_action(workflow, user, action_type: str, data: dict = None) -> dict:
                     role_code=role_code,
                 )
         except IntegrityError:
-            # Another approver just wrote this step. Recalculate.
-            idx = current_step(workflow)
+            # Another approver just wrote this step - that's fine
+            pass
 
-        idx += 1
-        return {"done": idx >= total, "state": state, "next_step": (None if idx >= total else idx)}
+        # ✅ FIX: Recalculate current step AFTER creating the action
+        new_current_step = current_step(workflow)
+        is_done = new_current_step >= total
+
+        return {
+            "done": is_done,
+            "state": state,
+            "next_step": new_current_step if not is_done else None
+        }
 
     # Non-approval actions are just appended
     Action.objects.create(
