@@ -141,10 +141,17 @@ class FormDataSerializer(serializers.Serializer):
 class WorkflowFormSerializer(serializers.ModelSerializer):
     """Serializer for workflow with form data"""
     
+    # Add data as a custom field since it's now a property
+    data = serializers.SerializerMethodField()
+    
     class Meta:
         model = Workflow
         fields = ['id', 'title', 'state', 'created_at', 'updated_at', 'data']
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_data(self, obj):
+        """Get data property"""
+        return obj.data
     
     def to_representation(self, instance):
         """Add computed properties to representation"""

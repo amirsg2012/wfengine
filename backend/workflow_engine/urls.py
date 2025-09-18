@@ -9,7 +9,7 @@ from apps.accounts.api import AuthView, MeView
 
 router = DefaultRouter()
 router.register(r"workflows", WorkflowViewSet, basename="workflows")
-router.register(r'workflows', WorkflowFormViewSet, basename='workflow-forms')
+router.register(r'workflows/forms', WorkflowFormViewSet, basename='workflow-forms')
 
 urlpatterns = [
     path("admin/", admin.site.urls),

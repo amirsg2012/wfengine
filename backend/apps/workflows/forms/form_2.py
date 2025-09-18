@@ -103,7 +103,7 @@ class ClientUndertakingForm(BaseWorkflowForm):
             
             # Also try to split name back to firstName/lastName if personalInformation doesn't exist
             full_name = applicant_details.get("name", "")
-            if full_name and "personalInformation" not in workflow_data:
+            if full_name:
                 name_parts = full_name.strip().split(" ", 1)
                 personal_info = {
                     "firstName": name_parts[0] if name_parts else "",
