@@ -3,13 +3,15 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from apps.workflows.api.api import WorkflowViewSet
+from apps.workflows.api.api import WorkflowViewSet,AttachmentViewSet
 from apps.workflows.api.views import WorkflowFormViewSet
 from apps.accounts.api import AuthView, MeView
 
 router = DefaultRouter()
 router.register(r"workflows", WorkflowViewSet, basename="workflows")
 router.register(r'workflows/forms', WorkflowFormViewSet, basename='workflow-forms')
+router.register(r"attachments", AttachmentViewSet, basename="attachments")
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),

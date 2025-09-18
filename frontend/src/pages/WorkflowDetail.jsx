@@ -25,121 +25,9 @@ import DetailsCard from '../components/letters/DetailsCard';
 import LetterHeader from '../components/letters/LetterHeader';
 import StateChip from '../components/letters/StateChip';
 import LetterSkeleton from '../components/letters/LetterSkeleton';
+import Form1 from '../components/forms/Form1';
 
-// Form Component for each form tab
-const FormTab = ({ formNumber, letter, isEditable, isLocked }) => {
-    const [formData, setFormData] = useState({});
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
 
-    const handleSave = async () => {
-        try {
-            setSaving(true);
-            // API call to save form data
-            await api.post(`/workflows/${letter.id}/forms/${formNumber}/`, formData);
-            // Show success message
-        } catch (err) {
-            console.error('Failed to save form:', err);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (isLocked) {
-        return (
-            <div className="text-center py-12">
-                <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-text-primary mb-2">فرم {formNumber} قفل است</h3>
-                <p className="text-text-secondary">
-                    این فرم تا رسیدن به مرحله مربوطه در دسترس نخواهد بود
-                </p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            {/* Form Header */}
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                    {isEditable ? <Edit className="w-5 h-5 text-primary-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
-                    فرم {formNumber}
-                </h3>
-                <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                        isEditable ? 'bg-success-100 text-success-700' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                        {isEditable ? 'قابل ویرایش' : 'فقط خواندنی'}
-                    </span>
-                </div>
-            </div>
-
-            {/* Form Content */}
-            <div className="card-modern p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-text-primary">
-                            فیلد نمونه ۱
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.field1 || ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, field1: e.target.value }))}
-                            disabled={!isEditable}
-                            className="input-modern"
-                            placeholder="مقدار را وارد کنید..."
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-text-primary">
-                            فیلد نمونه ۲
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.field2 || ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, field2: e.target.value }))}
-                            disabled={!isEditable}
-                            className="input-modern"
-                            placeholder="مقدار را وارد کنید..."
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium text-text-primary">
-                        توضیحات
-                    </label>
-                    <textarea
-                        rows={4}
-                        value={formData.description || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        disabled={!isEditable}
-                        className="input-modern resize-none"
-                        placeholder="توضیحات تکمیلی..."
-                    />
-                </div>
-
-                {isEditable && (
-                    <div className="flex justify-end pt-4 border-t">
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="btn-primary flex items-center gap-2"
-                        >
-                            {saving ? (
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                                <Check className="w-4 h-4" />
-                            )}
-                            <span>{saving ? 'در حال ذخیره...' : 'ذخیره فرم'}</span>
-                        </button>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
 
 // Attachments Tab Component
 const AttachmentsTab = ({ letter }) => {
@@ -323,6 +211,49 @@ export default function WorkflowDetail() {
             </div>
         );
     }
+    // Remove the generic FormTab component and add this instead:
+const renderFormContent = (tabId, letter, accessibility) => {
+    const { isLocked, isEditable } = accessibility;
+
+    if (isLocked) {
+        return (
+            <div className="text-center py-12">
+                <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-text-primary mb-2">
+                    این فرم هنوز در دسترس نیست
+                </h3>
+                <p className="text-text-secondary">
+                    پس از رسیدن به مرحله مربوطه، این فرم فعال خواهد شد
+                </p>
+            </div>
+        );
+    }
+
+    switch (tabId) {
+        case 'form1':
+            return (
+                <Form1 
+                    workflowId={letter.id}
+                    isEditable={isEditable}
+                    onSave={() => {
+                        // Refresh workflow data after save
+                        fetchLetter();
+                    }}
+                    onSubmit={() => {
+                        // Refresh and maybe show success message
+                        fetchLetter();
+                        fetchWorkflowStatus();
+                    }}
+                />
+            );
+        default:
+            return (
+                <div className="text-center py-12">
+                    <p className="text-text-secondary">این فرم هنوز پیاده‌سازی نشده است</p>
+                </div>
+            );
+    }
+};
 
     // Dynamic tabs based on workflow state
     const getAllTabs = () => {
@@ -437,12 +368,11 @@ export default function WorkflowDetail() {
                         <DetailsCard data={letter} showSensitive={showSensitive} />
                     )}
                     
-                    {activeTab === 'form1' && (
-                        <FormTab 
-                            formNumber={1}
-                            letter={letter}
-                            {...getFormAccessibility('Form1')}
-                        />
+                    {activeTab.startsWith('form') && (
+                        renderFormContent(
+                            activeTab,
+                            letter,
+                            getFormAccessibility(activeTab === 'form1' ? 'Form1' : activeTab === 'form2' ? 'Form2' : 'Form3'))
                     )}
                     
                     {activeTab === 'form2' && (

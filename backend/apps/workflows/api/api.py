@@ -3,6 +3,7 @@
 from django.db.models import Count
 from rest_framework import viewsets, permissions, decorators, response, status, filters
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
 from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
@@ -261,6 +262,38 @@ class AttachmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Attachment.objects.filter(workflow__created_by=self.request.user)
+    
+    @decorators.action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
+    def upload_attachment(self, request):
+        """Upload attachment to MinIO"""
+        try:
+            file = request.FILES.get('file')
+            name = request.data.get('name')
+            workflow_id = request.data.get('workflow')
+            
+            if not all([file, name, workflow_id]):
+                return Response({"error": "Missing required fields"}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+            
+            workflow = self.get_object_or_404(Workflow, id=workflow_id)
+            
+            # Create attachment (your existing Attachment model should handle MinIO upload)
+            attachment = Attachment.objects.create(
+                file=file,
+                name=name,
+                workflow=workflow,
+                uploaded_by=request.user
+            )
+            
+            return Response({
+                "id": str(attachment.id),
+                "file": attachment.file.url,
+                "name": attachment.name
+            })
+            
+        except Exception as e:
+            return Response({"error": str(e)}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # New CommentViewSet

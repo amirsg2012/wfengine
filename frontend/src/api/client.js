@@ -64,4 +64,16 @@ api.interceptors.response.use(
     }
 );
 
+// Add this method to your existing API client
+export const uploadAttachment = async (workflowId, file, name) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('name', name);
+    formData.append('workflow', workflowId);
+
+    return api.post('/attachments/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
 export default api;
