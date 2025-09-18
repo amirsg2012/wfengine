@@ -6,12 +6,12 @@ from rest_framework.response import Response
 from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
-from .models import Workflow, Attachment, Comment, Action
+from ..models import Workflow, Attachment, Comment, Action
 from .serializers import WorkflowSerializer, AttachmentSerializer, CommentSerializer, ActionSerializer
-from .actions import perform_action, current_step, steps_required, step_roles, can_user_satisfy_step, get_workflows_pending_user_action
-from .workflow_spec import NEXT_STATE
+from ..actions import perform_action, current_step, steps_required, step_roles, can_user_satisfy_step, get_workflows_pending_user_action
+from ..workflow_spec import NEXT_STATE
 from django_filters.rest_framework import DjangoFilterBackend
-from . import actions
+from .. import actions
 
 class WorkflowViewSet(viewsets.ModelViewSet):
     queryset = Workflow.objects.all().order_by("-created_at")

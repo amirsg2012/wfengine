@@ -4,24 +4,15 @@ from django.contrib.auth import get_user_model
 from django_fsm import FSMField, transition, ConcurrentTransitionMixin
 from .workflow_spec import NEXT_STATE
 from . import actions as act
-
+import json
+from datetime import datetime
 
 User = get_user_model()
 
-
-def actions_ok(instance):
-    from .actions import actions_ok as actions_ok_logic
-    return actions_ok_logic(instance)
-
-
 class Workflow(ConcurrentTransitionMixin, models.Model):
-    # Core fields
+    # Core identification fields
     title = models.CharField(max_length=300)
     body = models.TextField(blank=True, default="")
-
-    # Applicant fields
-    applicant_name = models.CharField(max_length=200)
-    applicant_national_id = models.CharField(max_length=20)
 
     # FSM state
     class State(models.TextChoices):
@@ -41,6 +32,24 @@ class Workflow(ConcurrentTransitionMixin, models.Model):
         Settlment = "Settlment"
 
     state = FSMField(default=State.ApplicantRequest, choices=State.choices, protected=True)
+    
+    # Flexible data storage for all form properties using TextField with JSON serialization
+    _data = models.TextField(blank=True, default='{}', db_column='data')
+    
+    @property
+    def data(self):
+        """Get data as Python dict"""
+        try:
+            return json.loads(self._data) if self._data else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
+    
+    @data.setter
+    def data(self, value):
+        """Set data from Python dict"""
+        self._data = json.dumps(value, ensure_ascii=False) if value else '{}'
+    
+    # Metadata
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="workflows")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -48,6 +57,82 @@ class Workflow(ConcurrentTransitionMixin, models.Model):
     def __str__(self):
         return f"{self.title} ({self.state})"
 
+    # Property accessors for common fields
+    @property
+    def applicant_name(self):
+        """Get full name from firstName and lastName"""
+        first = self.data.get('personalInformation', {}).get('firstName', '')
+        last = self.data.get('personalInformation', {}).get('lastName', '')
+        if first and last:
+            return f"{first} {last}"
+        return first or last or self.data.get('applicantDetails', {}).get('name', '')
+
+    @property
+    def applicant_national_id(self):
+        """Get national ID from various possible locations"""
+        return (
+            self.data.get('personalInformation', {}).get('nationalCode') or
+            self.data.get('applicantDetails', {}).get('nationalCode') or
+            ''
+        )
+
+    @property
+    def property_address(self):
+        """Get property address"""
+        return (
+            self.data.get('personalInformation', {}).get('residenceAddress') or
+            self.data.get('propertyDetails', {}).get('address') or
+            ''
+        )
+
+    @property
+    def registration_plate_number(self):
+        """Get property registration plate number"""
+        return (
+            self.data.get('propertyRegistrationPlateNumber') or
+            self.data.get('propertyDetails', {}).get('registrationPlateNumber') or
+            ''
+        )
+
+    def update_data(self, new_data, merge=True):
+        """Update workflow data with proper merging"""
+        current_data = self.data.copy()  # Get current data as dict
+        
+        if merge:
+            self._deep_merge_data(current_data, new_data)
+        else:
+            current_data = new_data
+            
+        self.data = current_data  # Use the property setter
+        self.save(update_fields=['_data', 'updated_at'])  # Save the actual field
+
+    def _deep_merge_data(self, target, source):
+        """Deep merge dictionaries"""
+        for key, value in source.items():
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                self._deep_merge_data(target[key], value)
+            else:
+                target[key] = value
+
+    def get_form_data(self, form_number):
+        """Get data formatted for a specific form"""
+        from .forms.registry import FormRegistry
+        form_class = FormRegistry.get_form(form_number)
+        if form_class:
+            return form_class.extract_from_workflow(self)
+        return {}
+
+    def update_from_form(self, form_number, form_data):
+        """Update workflow data from form submission"""
+        from .forms.registry import FormRegistry
+        form_class = FormRegistry.get_form(form_number)
+        if form_class:
+            workflow_data = form_class.map_to_workflow(form_data)
+            self.update_data(workflow_data)
+            
+    def actions_ok(instance):
+        from .actions import actions_ok as actions_ok_logic
+        return actions_ok_logic(instance)
     # All workflow state transitions
     @transition(field=state, source=State.ApplicantRequest, target=State.CEOInstruction, conditions=[actions_ok])
     def to_CEOInstruction(self, by=None):

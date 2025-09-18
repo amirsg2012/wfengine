@@ -78,7 +78,7 @@ const FormattedView = ({ data, showSensitive }) => {
             fields: ['applicant_name', 'applicant_national_id'],
             formatters: {
                 applicant_name: (value) => <span className="font-medium">{value}</span>,
-                applicant_national_id: (value) => <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{value}</span>
+                applicant_national_id: (value) => <span className="font-mono bg-primary-50 px-2 py-1 rounded text-sm">{value}</span>
             }
         },
         dates: {

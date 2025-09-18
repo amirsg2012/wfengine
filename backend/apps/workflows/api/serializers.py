@@ -1,6 +1,7 @@
 # apps/workflows/serializers.py
 from rest_framework import serializers
-from .models import Workflow, Attachment, Comment, Action
+from ..models import Workflow, Attachment, Comment, Action
+from ..forms.registry import FormRegistry
 from bson import ObjectId
 
 
@@ -114,3 +115,45 @@ class WorkflowSerializer(serializers.ModelSerializer):
         if not value or len(value.strip()) < 2:
             raise serializers.ValidationError("نام متقاضی باید حداقل ۲ کاراکتر داشته باشد")
         return value.strip()
+    
+class FormDataSerializer(serializers.Serializer):
+    """Generic serializer for form data"""
+    form_number = serializers.IntegerField()
+    data = serializers.DictField()
+    
+    def validate(self, attrs):
+        form_number = attrs.get('form_number')
+        form_data = attrs.get('data')
+        
+        # Get form class and validate
+        form_class = FormRegistry.get_form(form_number)
+        if not form_class:
+            raise serializers.ValidationError(f"Form {form_number} not found")
+        
+        # Validate form data
+        errors = form_class.validate(form_data)
+        if errors:
+            raise serializers.ValidationError({"data": errors})
+        
+        return attrs
+
+
+class WorkflowFormSerializer(serializers.ModelSerializer):
+    """Serializer for workflow with form data"""
+    
+    class Meta:
+        model = Workflow
+        fields = ['id', 'title', 'state', 'created_at', 'updated_at', 'data']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def to_representation(self, instance):
+        """Add computed properties to representation"""
+        data = super().to_representation(instance)
+        
+        # Add computed properties
+        data['applicant_name'] = instance.applicant_name
+        data['applicant_national_id'] = instance.applicant_national_id
+        data['property_address'] = instance.property_address
+        data['registration_plate_number'] = instance.registration_plate_number
+        
+        return data
