@@ -9,7 +9,7 @@ from apps.accounts.api import AuthView, MeView
 
 router = DefaultRouter()
 router.register(r"workflows", WorkflowViewSet, basename="workflows")
-router.register(r'workflows/forms', WorkflowFormViewSet, basename='workflow-forms')
+router.register(r'workflow-forms', WorkflowFormViewSet, basename='workflow-forms')
 router.register(r"attachments", AttachmentViewSet, basename="attachments")
 
 
@@ -20,3 +20,6 @@ urlpatterns = [
     path("api/admin/", include("apps.admin.urls")),  # Add admin routes
     path("api/", include(router.urls)),
 ]
+
+for url_pattern in router.urls:
+    print(url_pattern.pattern, url_pattern.name)

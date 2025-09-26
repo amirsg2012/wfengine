@@ -2,6 +2,8 @@
 from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django_fsm import FSMField, transition, ConcurrentTransitionMixin
+from storages.backends.s3boto3 import S3Boto3Storage
+
 from .workflow_spec import NEXT_STATE
 from . import actions as act
 import json
@@ -13,7 +15,7 @@ class Workflow(ConcurrentTransitionMixin, models.Model):
     # Core identification fields
     title = models.CharField(max_length=300)
     body = models.TextField(blank=True, default="")
-
+    
     # FSM state
     class State(models.TextChoices):
         ApplicantRequest = "ApplicantRequest"
@@ -239,7 +241,7 @@ class Action(models.Model):
 
 class Attachment(models.Model):
     workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name="attachments")
-    file = models.FileField(upload_to="attachments/")
+    file = models.FileField(upload_to="attachments/", storage=S3Boto3Storage())
     name = models.CharField(max_length=200, default="پیوست")
     uploaded_by = models.ForeignKey(User, on_delete=models.PROTECT)
     uploaded_at = models.DateTimeField(auto_now_add=True)

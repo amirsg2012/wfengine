@@ -12,7 +12,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ["id", "file", "name", "uploaded_by", "uploaded_at", "workflow_id"]
+        fields = ["id", "file", "name", "uploaded_by", "uploaded_at", "workflow_id","workflow"]
 
     def get_id(self, obj):
         return str(obj.pk)
@@ -57,6 +57,7 @@ class ActionSerializer(serializers.ModelSerializer):
 
 class WorkflowSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField(read_only=True)
+    
     created_by = serializers.CharField(source="created_by.username", read_only=True)
     attachments = serializers.SerializerMethodField(read_only=True)
     comments = serializers.SerializerMethodField(read_only=True)
@@ -64,7 +65,7 @@ class WorkflowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workflow
         fields = [
-            "id", "title", "body", "applicant_name", "applicant_national_id",
+            "id", "title", "body",
             "state", "created_by", "created_at", "updated_at", "attachments", "comments"
         ]
         read_only_fields = ["state", "created_by", "created_at", "updated_at"]
@@ -115,6 +116,13 @@ class WorkflowSerializer(serializers.ModelSerializer):
         if not value or len(value.strip()) < 2:
             raise serializers.ValidationError("نام متقاضی باید حداقل ۲ کاراکتر داشته باشد")
         return value.strip()
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Add computed properties
+        data['applicant_name'] = instance.applicant_name  # This calls the @property
+        data['applicant_national_id'] = instance.applicant_national_id  # This calls the @property
+        return data
     
 class FormDataSerializer(serializers.Serializer):
     """Generic serializer for form data"""

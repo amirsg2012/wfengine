@@ -1,6 +1,6 @@
 # apps/workflows/api.py - IMPROVED VERSION
 
-from django.db.models import Count
+from django.db.models import Count,Q
 from rest_framework import viewsets, permissions, decorators, response, status, filters
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
@@ -13,6 +13,7 @@ from ..actions import perform_action, current_step, steps_required, step_roles, 
 from ..workflow_spec import NEXT_STATE
 from django_filters.rest_framework import DjangoFilterBackend
 from .. import actions
+from django.shortcuts import get_object_or_404
 
 class WorkflowViewSet(viewsets.ModelViewSet):
     queryset = Workflow.objects.all().order_by("-created_at")
@@ -20,29 +21,69 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['state', 'created_by']
-    search_fields = ['title', 'applicant_name', 'applicant_national_id']
+    search_fields = ['title']
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+    # Get the data before saving
+        applicant_name = self.request.data.get('applicant_name', '')
+        applicant_national_id = self.request.data.get('applicant_national_id', '')
+        
+        # Create workflow instance
+        workflow = serializer.save(created_by=self.request.user)
+        
+        # Initialize data field with inherited values if they exist
+        if applicant_name or applicant_national_id:
+            initial_data = {}
+            
+            if applicant_name:
+                # Split name into firstName and lastName
+                name_parts = applicant_name.strip().split(' ', 1)
+                initial_data['personalInformation'] = {
+                    'firstName': name_parts[0] if name_parts else '',
+                    'lastName': name_parts[1] if len(name_parts) > 1 else '',
+                }
+                if applicant_national_id:
+                    initial_data['personalInformation']['nationalCode'] = applicant_national_id
+            
+            # Set the initial data
+            workflow.data = initial_data
+            workflow.save(update_fields=['_data'])
 
     def get_queryset(self):
         qs = super().get_queryset()
-
-        # Additional custom filtering
-        if state := self.request.query_params.get('state'):
-            qs = qs.filter(state=state)
+        
+        # Get query parameters
+        search = self.request.query_params.get('search', '').strip()
+        applicant_name = self.request.query_params.get('applicant_name', '').strip()
+        applicant_national_id = self.request.query_params.get('applicant_national_id', '').strip()
+        
+        # Custom search logic for JSON data field
+        if search:
+            # Search in title (regular field) and within JSON data
+            qs = qs.filter(
+                Q(title__icontains=search) |
+                Q(_data__contains=f'"firstName":"{search}"') |
+                Q(_data__contains=f'"lastName":"{search}"') |
+                Q(_data__contains=f'"nationalCode":"{search}"')
+            )
+        
+        # Filter by applicant name (search in firstName and lastName)
+        if applicant_name:
+            qs = qs.filter(
+                Q(_data__contains=f'"firstName":"{applicant_name}"') |
+                Q(_data__contains=f'"lastName":"{applicant_name}"')
+            )
+        
+        # Filter by national code
+        if applicant_national_id:
+            qs = qs.filter(_data__contains=f'"nationalCode":"{applicant_national_id}"')
+        
+        # Your existing date filtering
         if date_from := self.request.query_params.get('date_from'):
             qs = qs.filter(created_at__gte=date_from)
         if date_to := self.request.query_params.get('date_to'):
             qs = qs.filter(created_at__lte=date_to)
-
-        # ✅ NEW: Handle can_approve parameter properly
-        if self.request.query_params.get('can_approve'):
-            # Filter to only workflows where the current user can perform the next action
-            pending_workflows = get_workflows_pending_user_action(self.request.user)
-            pending_ids = [wf.id for wf in pending_workflows]
-            qs = qs.filter(id__in=pending_ids)
-
+            
         return qs
 
     # ✅ IMPROVED: Add can_approve to the serializer data
@@ -263,37 +304,9 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Attachment.objects.filter(workflow__created_by=self.request.user)
     
-    @decorators.action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
-    def upload_attachment(self, request):
-        """Upload attachment to MinIO"""
-        try:
-            file = request.FILES.get('file')
-            name = request.data.get('name')
-            workflow_id = request.data.get('workflow')
-            
-            if not all([file, name, workflow_id]):
-                return Response({"error": "Missing required fields"}, 
-                            status=status.HTTP_400_BAD_REQUEST)
-            
-            workflow = self.get_object_or_404(Workflow, id=workflow_id)
-            
-            # Create attachment (your existing Attachment model should handle MinIO upload)
-            attachment = Attachment.objects.create(
-                file=file,
-                name=name,
-                workflow=workflow,
-                uploaded_by=request.user
-            )
-            
-            return Response({
-                "id": str(attachment.id),
-                "file": attachment.file.url,
-                "name": attachment.name
-            })
-            
-        except Exception as e:
-            return Response({"error": str(e)}, 
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def perform_create(self, serializer):
+        attachment = serializer.save(uploaded_by=self.request.user)
+        print(f"File URL: {attachment.file.url}")
 
 
 # New CommentViewSet

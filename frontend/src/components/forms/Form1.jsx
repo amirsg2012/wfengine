@@ -22,23 +22,25 @@ const FormField = ({ label, required, error, helper, children }) => (
     </div>
 );
 
-const FileUpload = ({ label, accept, onUpload, currentFile, onRemove, required, error }) => {
+const FileUpload = ({ label, accept, onUpload, currentFile, onRemove, required, error,workflowId }) => {
     const [uploading, setUploading] = useState(false);
-
+    
     const handleFileSelect = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
-
+        
         setUploading(true);
         try {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('name', file.name);
+            formData.append('workflow', workflowId)
 
             const response = await api.post('/attachments/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-
+            console.log(response.data.file);
+            
             onUpload(response.data.file); // URL to the uploaded file
         } catch (err) {
             console.error('Upload failed:', err);
@@ -130,7 +132,7 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
     const loadFormData = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/workflows/forms/${workflowId}/forms/1/`);
+            const response = await api.get(`/workflow-forms/${workflowId}/forms/1/`);
             if (response.data.data) {
                 setFormData(prev => ({
                     ...prev,
@@ -199,7 +201,7 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
 
         try {
             setSaving(true);
-            await api.post(`/workflows/forms/${workflowId}/forms/1/`, formData);
+            await api.post(`/workflow-forms/${workflowId}/forms/1/`, formData);
             onSave?.();
         } catch (err) {
             console.error('Failed to save form:', err);
@@ -214,9 +216,11 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
         try {
             setSubmitting(true);
             // Save form data
-            await api.post(`/workflows/forms/${workflowId}/forms/1/`, formData);
+            await api.post(`/workflow-forms/${workflowId}/forms/1/`, formData);
             // Move to next state
-            await api.post(`/workflows/${workflowId}/approve/`);
+             await api.post(`/workflows/${workflowId}/perform_action/`, { 
+                action: "APPROVE" 
+            });
             onSubmit?.();
         } catch (err) {
             console.error('Failed to submit form:', err);
@@ -406,6 +410,7 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
                         currentFile={formData.submittedDocuments.ownershipDeed?.file}
                         onUpload={(url) => handleDocumentUpload('ownershipDeed', url)}
                         onRemove={() => handleDocumentUpload('ownershipDeed', null)}
+                        workflowId={workflowId}
                         required
                     />
 
@@ -415,6 +420,7 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
                         currentFile={formData.submittedDocuments.benchagh}
                         onUpload={(url) => handleDocumentUpload('benchagh', url)}
                         onRemove={() => handleDocumentUpload('benchagh', null)}
+                        workflowId={workflowId}
                     />
 
                     <FileUpload
@@ -423,6 +429,7 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
                         currentFile={formData.submittedDocuments.buildingPermit?.file}
                         onUpload={(url) => handleDocumentUpload('buildingPermit', url)}
                         onRemove={() => handleDocumentUpload('buildingPermit', null)}
+                        workflowId={workflowId}
                     />
 
                     <FileUpload
@@ -431,6 +438,7 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
                         currentFile={formData.submittedDocuments.certificateOfNoViolation?.file}
                         onUpload={(url) => handleDocumentUpload('certificateOfNoViolation', url)}
                         onRemove={() => handleDocumentUpload('certificateOfNoViolation', null)}
+                        workflowId={workflowId}
                     />
                 </div>
             </div>

@@ -15,9 +15,9 @@ class WorkflowFormViewSet(viewsets.ModelViewSet):
     serializer_class = WorkflowFormSerializer
     permission_classes = [IsAuthenticated]
     
-    @action(detail=True, methods=['get'], url_path='forms/(?P<form_number>[0-9]+)')
-    def get_form(self, request, pk=None, form_number=None):
-        """Get form data for a specific form"""
+    @action(detail=True, methods=['get', 'post'], url_path='forms/(?P<form_number>[0-9]+)')
+    def form_action(self, request, pk=None, form_number=None):
+        """Handle both GET and POST for forms"""
         workflow = self.get_object()
         form_number = int(form_number)
         
@@ -28,55 +28,40 @@ class WorkflowFormViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Extract form data
-        form_data = form_class.extract_from_workflow(workflow)
-        
-        return Response({
-            "form_number": form_number,
-            "form_title": form_class.form_title,
-            "data": form_data,
-            "schema": form_class.get_schema()
-        })
-    
-    @action(detail=True, methods=['post'], url_path='forms/(?P<form_number>[0-9]+)')
-    def submit_form(self, request, pk=None, form_number=None):
-        """Submit form data"""
-        workflow = self.get_object()
-        form_number = int(form_number)
-        
-        form_class = FormRegistry.get_form(form_number)
-        if not form_class:
-            return Response(
-                {"error": f"Form {form_number} not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Validate form data
-        serializer = FormDataSerializer(data={
-            "form_number": form_number,
-            "data": request.data
-        })
-        
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Update workflow
-        try:
-            workflow.update_from_form(form_number, request.data)
-            
-            # Serialize updated workflow
-            workflow_serializer = WorkflowFormSerializer(workflow)
-            
+        if request.method == 'GET':
+            # Get form data
+            form_data = form_class.extract_from_workflow(workflow)
             return Response({
-                "message": "Form submitted successfully",
-                "workflow": workflow_serializer.data
+                "form_number": form_number,
+                "form_title": form_class.form_title,
+                "data": form_data,
+                "schema": form_class.get_schema()
+            })
+        
+        elif request.method == 'POST':
+            # Submit form data
+            serializer = FormDataSerializer(data={
+                "form_number": form_number,
+                "data": request.data
             })
             
-        except Exception as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                workflow.update_from_form(form_number, request.data)
+                workflow_serializer = WorkflowFormSerializer(workflow)
+                
+                return Response({
+                    "message": "Form submitted successfully",
+                    "workflow": workflow_serializer.data
+                })
+                
+            except Exception as e:
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
     
     @action(detail=False, methods=['get'])
     def forms_metadata(self, request):
