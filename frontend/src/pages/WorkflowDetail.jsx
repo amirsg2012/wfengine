@@ -26,6 +26,7 @@ import LetterHeader from '../components/letters/LetterHeader';
 import StateChip from '../components/letters/StateChip';
 import LetterSkeleton from '../components/letters/LetterSkeleton';
 import Form1 from '../components/forms/Form1';
+import Form2 from '../components/forms/Form2';
 
 
 
@@ -236,16 +237,30 @@ const renderFormContent = (tabId, letter, accessibility) => {
                     workflowId={letter.id}
                     isEditable={isEditable}
                     onSave={() => {
-                        // Refresh workflow data after save
                         fetchLetter();
                     }}
                     onSubmit={() => {
-                        // Refresh and maybe show success message
                         fetchLetter();
                         fetchWorkflowStatus();
                     }}
                 />
             );
+        
+        case 'form2':  // Add this case
+            return (
+                <Form2 
+                    workflowId={letter.id}
+                    isEditable={isEditable}
+                    onSave={() => {
+                        fetchLetter();
+                    }}
+                    onSubmit={() => {
+                        fetchLetter();
+                        fetchWorkflowStatus();
+                    }}
+                />
+            );
+
         default:
             return (
                 <div className="text-center py-12">
@@ -375,7 +390,7 @@ const renderFormContent = (tabId, letter, accessibility) => {
                             getFormAccessibility(activeTab === 'form1' ? 'Form1' : activeTab === 'form2' ? 'Form2' : 'Form3'))
                     )}
                     
-                    {activeTab === 'form2' && (
+                    {/* {activeTab === 'form2' && (
                         <FormTab 
                             formNumber={2}
                             letter={letter}
@@ -397,7 +412,7 @@ const renderFormContent = (tabId, letter, accessibility) => {
                             letter={letter}
                             {...getFormAccessibility('Form4')}
                         />
-                    )}
+                    )} */}
 
                     {activeTab === 'attachments' && (
                         <AttachmentsTab letter={letter} />

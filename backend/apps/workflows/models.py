@@ -3,6 +3,8 @@ from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django_fsm import FSMField, transition, ConcurrentTransitionMixin
 from storages.backends.s3boto3 import S3Boto3Storage
+from typing import Dict, Any
+
 
 from .workflow_spec import NEXT_STATE
 from . import actions as act
@@ -131,6 +133,29 @@ class Workflow(ConcurrentTransitionMixin, models.Model):
         if form_class:
             workflow_data = form_class.map_to_workflow(form_data)
             self.update_data(workflow_data)
+    
+    def can_advance_from_form3(self) -> bool:
+        """Check if Form3 is completed and workflow can advance to next state"""
+        if self.state != 'Form3':
+            return False
+        
+        from .forms.form_3 import PropertyStatusReviewForm
+        completion_status = PropertyStatusReviewForm.get_completion_status(self)
+        return completion_status.get('is_fully_completed', False)
+
+    def get_form3_progress_info(self) -> Dict[str, Any]:
+        """Get detailed Form3 progress information"""
+        if self.state != 'Form3':
+            return {}
+        
+        from .forms.form_3 import PropertyStatusReviewForm
+        from .actions import get_form3_step_info, get_form3_completion_status
+        
+        return {
+            'current_step': get_form3_step_info(self),
+            'completion_status': get_form3_completion_status(self),
+            'can_advance': self.can_advance_from_form3()
+        }
             
     def actions_ok(instance):
         from .actions import actions_ok as actions_ok_logic
