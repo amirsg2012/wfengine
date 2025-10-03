@@ -95,7 +95,10 @@ class SpecificationsAndDocumentsForm(BaseWorkflowForm):
                     "type": "object",
                     "properties": {
                         "name": {"type": "string"},
-                        "signature": {"type": "string"},  # JWT
+                        "signatureUrl": {"type": "string"},  # Digital signature image URL
+                        "signatureHash": {"type": "string"},  # Signature verification hash
+                        "signedBy": {"type": "string"},  # Username who signed
+                        "signedAt": {"type": "string", "format": "date-time"},  # Timestamp
                         "date": {"type": "string", "format": "date"}
                     }
                 }

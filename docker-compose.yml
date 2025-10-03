@@ -137,7 +137,7 @@ services:
       /bin/sh -c "
       /usr/bin/mc alias set myminio http://minio:9000 minio minio123;
       /usr/bin/mc mb myminio/attachments --ignore-existing;
-      /usr/bin/mc policy set public myminio/attachments;
+      /usr/bin/mc anonymous set download myminio/attachments;
       exit 0;
       "
 

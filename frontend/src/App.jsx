@@ -3,16 +3,20 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Shell from './layout/Shell';
+import AdminShell from './layout/AdminShell';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WorkflowList from './pages/WorkflowList';
 import WorkflowCreate from './pages/WorkflowCreate';
 import WorkflowDetail from './pages/WorkflowDetail';
 import Reports from './pages/Reports';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import ProfileSettings from './pages/ProfileSettings';
+import AdminDashboard from './pages/admin/AdminDashboardNew';
 import UserManagement from './pages/admin/UserManagement';
-import WorkflowConfiguration from './pages/admin/WorkflowConfiguration';
+import WorkflowTemplateManagement from './pages/admin/WorkflowTemplateManagement';
 import SystemLogs from './pages/admin/SystemLogs';
+import SystemSettings from './pages/admin/SystemSettings';
+import PermissionManagement from './pages/admin/PermissionManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { AuthProvider } from './api/useAuth';
@@ -60,7 +64,7 @@ function AppContent() {
                 token ? <Navigate to="/inbox" replace /> : <Login />
             } />
             
-            {/* Protected routes */}
+            {/* Protected routes - User Shell */}
             <Route path="/" element={<ProtectedRoute><Shell /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/inbox" replace />} />
                 <Route path="inbox" element={<Dashboard />} />
@@ -68,12 +72,17 @@ function AppContent() {
                 <Route path="workflows/create" element={<WorkflowCreate />} />
                 <Route path="workflows/:id" element={<WorkflowDetail />} />
                 <Route path="reports" element={<Reports />} />
-                
-                {/* Admin Routes */}
-                <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                <Route path="admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
-                <Route path="admin/workflow-config" element={<AdminRoute><WorkflowConfiguration /></AdminRoute>} />
-                <Route path="admin/system-logs" element={<AdminRoute><SystemLogs /></AdminRoute>} />
+                <Route path="profile" element={<ProfileSettings />} />
+            </Route>
+
+            {/* Admin Routes - Admin Shell */}
+            <Route path="/admin" element={<AdminRoute><AdminShell /></AdminRoute>}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="permissions" element={<PermissionManagement />} />
+                <Route path="workflow-template" element={<WorkflowTemplateManagement />} />
+                <Route path="logs" element={<SystemLogs />} />
+                <Route path="settings" element={<SystemSettings />} />
             </Route>
             
             {/* Catch-all redirect */}

@@ -1,7 +1,16 @@
 // frontend/src/components/forms/Form1.jsx
+/**
+ * @deprecated This component is deprecated and will be removed in a future version.
+ * Use DynamicFormRenderer instead for dynamic form rendering based on API schemas.
+ *
+ * This file is kept for reference only. The WorkflowDetail page now uses
+ * DynamicFormRenderer which fetches forms from /api/dynamic-forms/ endpoint.
+ */
 import React, { useState, useEffect } from 'react';
-import { User, FileText, Upload, Calendar, X, Check, AlertCircle, Save, ArrowRight } from 'lucide-react';
+import { User, FileText, Upload, Calendar, X, Check, AlertCircle, Save, ArrowRight, Pen } from 'lucide-react';
 import api from '../../api/client';
+import { getMySignature, applySignature } from '../../api/signatures';
+import SignatureDisplay from '../signature/SignatureDisplay';
 
 const FormField = ({ label, required, error, helper, children }) => (
     <div className="space-y-2">
@@ -116,18 +125,37 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
             representationDocument: { file: null, type: 'legal' },
             imageFiles: []
         },
-        propertyRegistrationPlateNumber: ''
+        propertyRegistrationPlateNumber: '',
+        reviewer: {
+            name: '',
+            signatureUrl: '',
+            signatureHash: '',
+            signedBy: '',
+            signedAt: ''
+        }
     });
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [hasSignature, setHasSignature] = useState(false);
+    const [applyingSignature, setApplyingSignature] = useState(false);
 
     // Load existing form data
     useEffect(() => {
         loadFormData();
+        checkUserSignature();
     }, [workflowId]);
+
+    const checkUserSignature = async () => {
+        try {
+            const data = await getMySignature();
+            setHasSignature(data.has_signature);
+        } catch (err) {
+            console.error('Failed to check signature:', err);
+        }
+    };
 
     const loadFormData = async () => {
         try {
@@ -210,6 +238,35 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
         }
     };
 
+    const handleApplySignature = async () => {
+        if (!hasSignature) {
+            alert('لطفا ابتدا امضای خود را در پروفایل خود آپلود کنید');
+            return;
+        }
+
+        try {
+            setApplyingSignature(true);
+            const result = await applySignature(workflowId, 1, 'reviewer.signatureUrl');
+
+            // Update form data with signature
+            setFormData(prev => ({
+                ...prev,
+                reviewer: {
+                    ...prev.reviewer,
+                    signatureUrl: result.signature_url,
+                    signatureHash: result.signature_hash,
+                    signedBy: result.signed_by || '',
+                    signedAt: result.signed_at
+                }
+            }));
+        } catch (err) {
+            console.error('Failed to apply signature:', err);
+            alert('خطا در اعمال امضا');
+        } finally {
+            setApplyingSignature(false);
+        }
+    };
+
     const handleSubmitAndNext = async () => {
         if (!validateForm()) return;
 
@@ -218,8 +275,8 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
             // Save form data
             await api.post(`/workflow-forms/${workflowId}/forms/1/`, formData);
             // Move to next state
-             await api.post(`/workflows/${workflowId}/perform_action/`, { 
-                action: "APPROVE" 
+             await api.post(`/workflows/${workflowId}/perform_action/`, {
+                action: "APPROVE"
             });
             onSubmit?.();
         } catch (err) {
@@ -440,6 +497,87 @@ export default function Form1({ workflowId, isEditable, onSave, onSubmit }) {
                         onRemove={() => handleDocumentUpload('certificateOfNoViolation', null)}
                         workflowId={workflowId}
                     />
+                </div>
+            </div>
+
+            {/* Reviewer Signature Section */}
+            <div className="card-modern space-y-6">
+                <h3 className="text-lg font-semibold text-text-primary border-b pb-3 flex items-center gap-2">
+                    <Pen className="w-5 h-5 text-primary-500" />
+                    امضای بازبین
+                </h3>
+
+                <FormField label="نام بازبین">
+                    <input
+                        type="text"
+                        value={formData.reviewer.name}
+                        onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            reviewer: { ...prev.reviewer, name: e.target.value }
+                        }))}
+                        className="input-modern"
+                        disabled={!isEditable}
+                        placeholder="نام بازبین"
+                    />
+                </FormField>
+
+                {/* Digital Signature Section */}
+                <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
+                    <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                        <Pen className="w-5 h-5" />
+                        امضای دیجیتال بازبین
+                    </h4>
+
+                    {formData.reviewer.signatureUrl ? (
+                        /* Display existing signature */
+                        <SignatureDisplay
+                            signature={{
+                                signatureUrl: formData.reviewer.signatureUrl,
+                                signatureHash: formData.reviewer.signatureHash,
+                                signedBy: formData.reviewer.signedBy,
+                                signedAt: formData.reviewer.signedAt
+                            }}
+                            workflowId={workflowId}
+                            formNumber={1}
+                            fieldPath="reviewer.signatureUrl"
+                            showVerification={true}
+                        />
+                    ) : (
+                        /* Show apply signature button */
+                        <div className="space-y-3">
+                            <p className="text-sm text-gray-600">
+                                برای بازبینی فرم، امضای دیجیتال خود را اعمال کنید
+                            </p>
+
+                            {isEditable && (
+                                <button
+                                    type="button"
+                                    onClick={handleApplySignature}
+                                    disabled={applyingSignature || !hasSignature}
+                                    className="btn-primary flex items-center gap-2 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {applyingSignature ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            در حال اعمال امضا...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Pen className="w-4 h-4" />
+                                            اعمال امضای من
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            {!hasSignature && (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
+                                    <p>شما هنوز امضای دیجیتال خود را آپلود نکرده‌اید.</p>
+                                    <p className="mt-1">لطفا ابتدا به پروفایل خود بروید و امضای خود را آپلود کنید.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 

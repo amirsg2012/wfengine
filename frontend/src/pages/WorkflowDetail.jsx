@@ -25,18 +25,15 @@ import DetailsCard from '../components/letters/DetailsCard';
 import LetterHeader from '../components/letters/LetterHeader';
 import StateChip from '../components/letters/StateChip';
 import LetterSkeleton from '../components/letters/LetterSkeleton';
-import Form1 from '../components/forms/Form1';
-import Form2 from '../components/forms/Form2';
+import DynamicFormRenderer from '../components/forms/DynamicFormRenderer';
+import TransitionButton from '../components/workflow/TransitionButton';
+import { getAvailableTransitions, getWorkflowInfo } from '../api/workflows';
 
 
 
 // Attachments Tab Component
 const AttachmentsTab = ({ letter }) => {
-    const mockAttachments = [
-        { state: 'ApplicantRequest', name: 'درخواست اولیه', file: 'initial_request.pdf' },
-        { state: 'Form1', name: 'فرم شماره ۱', file: 'form1_completed.pdf' },
-        { state: 'Form2', name: 'مدارک هویتی', file: 'identity_docs.pdf' },
-    ];
+    const attachments = letter.attachments || [];
 
     return (
         <div className="space-y-4">
@@ -45,34 +42,39 @@ const AttachmentsTab = ({ letter }) => {
                 پیوست‌ها و مدارک
             </h3>
 
-            {mockAttachments.length > 0 ? (
+            {attachments.length > 0 ? (
                 <div className="space-y-3">
-                    {mockAttachments.map((attachment, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 bg-surface rounded-xl border hover:border-primary-200 transition-colors">
+                    {attachments.map((attachment) => (
+                        <div key={attachment.id} className="flex items-center justify-between p-4 bg-surface rounded-xl border hover:border-primary-200 transition-colors">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
                                     <FileText className="w-6 h-6 text-primary-600" />
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <StateChip label={attachment.state} size="small" />
-                                        <span className="text-sm text-text-secondary">:</span>
                                         <span className="font-medium text-text-primary">{attachment.name}</span>
-                                        <span className="text-sm text-text-secondary">:</span>
-                                        <span className="text-sm font-mono text-primary-600">{attachment.file}</span>
                                     </div>
                                     <p className="text-xs text-text-secondary">
-                                        آپلود شده در مرحله {attachment.state}
+                                        آپلود شده توسط {attachment.uploaded_by} • {new Date(attachment.uploaded_at).toLocaleDateString('fa-IR')}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button className="btn-ghost !text-xs !py-1 !px-2">
+                                <a
+                                    href={attachment.file}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn-ghost !text-xs !py-1 !px-2"
+                                >
                                     مشاهده
-                                </button>
-                                <button className="btn-ghost !text-xs !py-1 !px-2">
+                                </a>
+                                <a
+                                    href={attachment.file}
+                                    download
+                                    className="btn-ghost !text-xs !py-1 !px-2"
+                                >
                                     دانلود
-                                </button>
+                                </a>
                             </div>
                         </div>
                     ))}
@@ -94,9 +96,12 @@ export default function WorkflowDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('details');
+    const [activeSubTab, setActiveSubTab] = useState(null); // For nested form tabs
     const [showSensitive, setShowSensitive] = useState(false);
     const [approving, setApproving] = useState(false);
     const [workflowStatus, setWorkflowStatus] = useState(null); // ✅ NEW: Separate status state
+    const [workflowInfo, setWorkflowInfo] = useState(null); // Configurable workflow info
+    const [availableTransitions, setAvailableTransitions] = useState([]); // Available transitions
 
     // State progression order
     const stateProgression = [
@@ -119,6 +124,8 @@ export default function WorkflowDetail() {
     useEffect(() => {
         fetchLetter();
         fetchWorkflowStatus();
+        fetchWorkflowInfo();
+        fetchAvailableTransitions();
     }, [id]);
 
     const fetchLetter = async () => {
@@ -144,6 +151,27 @@ export default function WorkflowDetail() {
         }
     };
 
+    const fetchWorkflowInfo = async () => {
+        try {
+            const data = await getWorkflowInfo(id);
+            setWorkflowInfo(data);
+        } catch (err) {
+            console.error('Error fetching workflow info:', err);
+        }
+    };
+
+    const fetchAvailableTransitions = async () => {
+        try {
+            const data = await getAvailableTransitions(id);
+            if (data.transitions) {
+                setAvailableTransitions(data.transitions);
+            }
+        } catch (err) {
+            console.error('Error fetching available transitions:', err);
+            // Not a critical error - workflow might not be configurable
+        }
+    };
+
     const handleApprove = async () => {
         // ✅ IMPROVED: Use workflowStatus for accurate can_approve check
         const canApprove = workflowStatus?.can_approve || false;
@@ -164,7 +192,12 @@ export default function WorkflowDetail() {
                 // Handle error (could add toast notification here)
             } else {
                 // ✅ IMPROVED: Refresh both letter and status
-                await Promise.all([fetchLetter(), fetchWorkflowStatus()]);
+                await Promise.all([
+                    fetchLetter(),
+                    fetchWorkflowStatus(),
+                    fetchWorkflowInfo(),
+                    fetchAvailableTransitions()
+                ]);
             }
         } catch (err) {
             console.error('Approval failed:', err);
@@ -212,95 +245,105 @@ export default function WorkflowDetail() {
             </div>
         );
     }
-    // Remove the generic FormTab component and add this instead:
-const renderFormContent = (tabId, letter, accessibility) => {
-    const { isLocked, isEditable } = accessibility;
 
-    if (isLocked) {
-        return (
-            <div className="text-center py-12">
-                <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-text-primary mb-2">
-                    این فرم هنوز در دسترس نیست
-                </h3>
-                <p className="text-text-secondary">
-                    پس از رسیدن به مرحله مربوطه، این فرم فعال خواهد شد
-                </p>
-            </div>
-        );
-    }
+    // Render form content based on tab
+    const renderFormContent = (tabId, letter, accessibility) => {
+        const { isLocked, isEditable } = accessibility;
 
-    switch (tabId) {
-        case 'form1':
-            return (
-                <Form1 
-                    workflowId={letter.id}
-                    isEditable={isEditable}
-                    onSave={() => {
-                        fetchLetter();
-                    }}
-                    onSubmit={() => {
-                        fetchLetter();
-                        fetchWorkflowStatus();
-                    }}
-                />
-            );
-        
-        case 'form2':  // Add this case
-            return (
-                <Form2 
-                    workflowId={letter.id}
-                    isEditable={isEditable}
-                    onSave={() => {
-                        fetchLetter();
-                    }}
-                    onSubmit={() => {
-                        fetchLetter();
-                        fetchWorkflowStatus();
-                    }}
-                />
-            );
-
-        default:
+        if (isLocked) {
             return (
                 <div className="text-center py-12">
-                    <p className="text-text-secondary">این فرم هنوز پیاده‌سازی نشده است</p>
+                    <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-text-primary mb-2">
+                        این فرم هنوز در دسترس نیست
+                    </h3>
+                    <p className="text-text-secondary">
+                        پس از رسیدن به مرحله مربوطه، این فرم فعال خواهد شد
+                    </p>
                 </div>
             );
-    }
-};
+        }
+
+        // Render forms using DynamicFormRenderer
+        // Extract form number from tabId (e.g., 'form1' -> 1)
+        const formNumberMatch = tabId.match(/^form(\d+)$/);
+        if (formNumberMatch) {
+            const formNumber = parseInt(formNumberMatch[1], 10);
+            return (
+                <DynamicFormRenderer
+                    key={`form-${formNumber}-${letter.id}`}
+                    workflowId={letter.id}
+                    formNumber={formNumber}
+                    readOnly={!isEditable}
+                    onSubmit={() => {
+                        fetchLetter();
+                        fetchWorkflowStatus();
+                        fetchWorkflowInfo();
+                        fetchAvailableTransitions();
+                    }}
+                />
+            );
+        }
+
+        return (
+            <div className="text-center py-12">
+                <p className="text-text-secondary">این فرم هنوز پیاده‌سازی نشده است</p>
+            </div>
+        );
+    };
+
+    // Get form tabs for the nested "مراحل فرایند" tab
+    const getFormTabs = () => {
+        const formTabs = [];
+
+        // Get form tabs dynamically from workflow template if configurable
+        if (workflowInfo?.configurable?.form_states) {
+            // Use form states from backend
+            const formStates = workflowInfo.configurable.form_states;
+
+            formStates.forEach(formState => {
+                const { isLocked } = getFormAccessibility(formState.code);
+                formTabs.push({
+                    id: `form${formState.form_number}`,
+                    label: formState.name_fa,
+                    icon: isLocked ? Lock : Edit,
+                    formState: formState.code,
+                    formNumber: formState.form_number,
+                    isAvailable: true,
+                    isLocked
+                });
+            });
+        } else {
+            // Legacy mode - show all forms
+            const legacyFormTabs = [
+                { id: 'form1', label: 'فرم ۱', icon: Edit, formState: 'Form1', formNumber: 1 },
+                { id: 'form2', label: 'فرم ۲', icon: Edit, formState: 'Form2', formNumber: 2 },
+                { id: 'form3', label: 'فرم ۳', icon: Edit, formState: 'Form3', formNumber: 3 }
+            ];
+
+            legacyFormTabs.forEach(tab => {
+                const { isLocked } = getFormAccessibility(tab.formState);
+                formTabs.push({
+                    ...tab,
+                    isAvailable: true,
+                    isLocked,
+                    icon: isLocked ? Lock : tab.icon
+                });
+            });
+        }
+
+        return formTabs;
+    };
 
     // Dynamic tabs based on workflow state
     const getAllTabs = () => {
         const baseTabs = [
-            { id: 'details', label: 'جزئیات',isLocked: false ,icon: FileText, isAvailable: true }
+            { id: 'details', label: 'جزئیات', isLocked: false, icon: FileText, isAvailable: true },
+            { id: 'process-stages', label: 'مراحل فرایند', isLocked: false, icon: Settings, isAvailable: true, hasSubTabs: true },
+            { id: 'attachments', label: 'پیوست‌ها', isLocked: false, icon: Paperclip, isAvailable: true },
+            { id: 'workflow', label: 'گردش کار', isLocked: false, icon: Clock, isAvailable: true },
+            { id: 'comments', label: 'نظرات', isLocked: false, icon: MessageSquare, isAvailable: true }
         ];
-
-        // Form tabs - show based on progression
-        const formTabs = [
-            { id: 'form1', label: 'فرم ۱', icon: Edit, formState: 'Form1' },
-            { id: 'form2', label: 'فرم ۲', icon: Edit, formState: 'Form2' },
-            { id: 'form3', label: 'فرم ۳', icon: Edit, formState: 'Form3' },
-            { id: 'form4', label: 'فرم ۴', icon: Edit, formState: 'Form4' }
-        ];
-
-        // Add form tabs with accessibility info
-        formTabs.forEach(tab => {
-            const { isLocked } = getFormAccessibility(tab.formState);
-            baseTabs.push({
-                ...tab,
-                isAvailable: true,
-                isLocked,
-                icon: isLocked ? Lock : tab.icon
-            });
-        });
-
-        // Always available tabs
-        baseTabs.push(
-            { id: 'attachments', label: 'پیوست‌ها',isLocked: false, icon: Paperclip, isAvailable: true },
-            { id: 'workflow', label: 'گردش کار', isLocked: false,icon: Clock, isAvailable: true },
-            { id: 'comments', label: 'نظرات', isLocked: false,icon: MessageSquare, isAvailable: true }
-        );
 
         return baseTabs;
     };
@@ -380,39 +423,95 @@ const renderFormContent = (tabId, letter, accessibility) => {
                 {/* Tab Content */}
                 <div className="p-6">
                     {activeTab === 'details' && (
-                        <DetailsCard data={letter} showSensitive={showSensitive} />
+                        <div className="space-y-6">
+                            <DetailsCard data={letter} showSensitive={showSensitive} />
+
+                            {/* Required Approver Info */}
+                            {workflowStatus?.required_approver && (
+                                <div className="card-modern bg-amber-50 border-amber-200">
+                                    <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
+                                        <User className="w-4 h-4" />
+                                        تایید مورد نیاز
+                                    </h3>
+                                    <div className="text-sm text-amber-800">
+                                        <p className="mb-1">
+                                            <span className="font-semibold">نقش:</span> {workflowStatus.required_approver.role_name_fa || workflowStatus.required_approver.role_code}
+                                        </p>
+                                        {workflowStatus.required_approver.step_name_fa && (
+                                            <p>
+                                                <span className="font-semibold">مرحله:</span> {workflowStatus.required_approver.step_name_fa}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Available Transitions (for configurable workflows) */}
+                            {workflowInfo?.is_configurable && availableTransitions.length > 0 && (
+                                <div className="card-modern">
+                                    <h3 className="text-lg font-bold text-text-primary mb-4">
+                                        انتقال‌های موجود
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {availableTransitions.map((transition) => (
+                                            <TransitionButton
+                                                key={transition.id}
+                                                workflow={letter}
+                                                transition={transition}
+                                                onTransitionComplete={async () => {
+                                                    await Promise.all([
+                                                        fetchLetter(),
+                                                        fetchWorkflowStatus(),
+                                                        fetchWorkflowInfo(),
+                                                        fetchAvailableTransitions()
+                                                    ]);
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
-                    
-                    {activeTab.startsWith('form') && (
-                        renderFormContent(
-                            activeTab,
-                            letter,
-                            getFormAccessibility(activeTab === 'form1' ? 'Form1' : activeTab === 'form2' ? 'Form2' : 'Form3'))
-                    )}
-                    
-                    {/* {activeTab === 'form2' && (
-                        <FormTab 
-                            formNumber={2}
-                            letter={letter}
-                            {...getFormAccessibility('Form2')}
-                        />
-                    )}
-                    
-                    {activeTab === 'form3' && (
-                        <FormTab 
-                            formNumber={3}
-                            letter={letter}
-                            {...getFormAccessibility('Form3')}
-                        />
-                    )}
-                    
-                    {activeTab === 'form4' && (
-                        <FormTab 
-                            formNumber={4}
-                            letter={letter}
-                            {...getFormAccessibility('Form4')}
-                        />
-                    )} */}
+
+                    {/* Process Stages Tab with nested form tabs */}
+                    {activeTab === 'process-stages' && (() => {
+                        const formTabs = getFormTabs();
+                        const currentSubTab = activeSubTab || formTabs[0]?.id;
+
+                        return (
+                            <div className="space-y-4">
+                                {/* Sub-tabs for forms */}
+                                <div className="flex gap-2 border-b pb-2">
+                                    {formTabs.map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveSubTab(tab.id)}
+                                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${
+                                                currentSubTab === tab.id
+                                                    ? 'bg-primary-500 text-white'
+                                                    : 'text-text-secondary hover:bg-surface'
+                                            }`}
+                                        >
+                                            {React.createElement(tab.icon, { className: 'w-4 h-4' })}
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Sub-tab content */}
+                                {formTabs.map((tab) => {
+                                    if (currentSubTab !== tab.id) return null;
+                                    const formState = tab.formState || tab.id.replace('form', 'Form');
+                                    return (
+                                        <div key={tab.id}>
+                                            {renderFormContent(tab.id, letter, getFormAccessibility(formState))}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })()}
 
                     {activeTab === 'attachments' && (
                         <AttachmentsTab letter={letter} />

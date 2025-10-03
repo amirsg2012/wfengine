@@ -1,7 +1,16 @@
 // frontend/src/components/forms/Form2.jsx
+/**
+ * @deprecated This component is deprecated and will be removed in a future version.
+ * Use DynamicFormRenderer instead for dynamic form rendering based on API schemas.
+ *
+ * This file is kept for reference only. The WorkflowDetail page now uses
+ * DynamicFormRenderer which fetches forms from /api/dynamic-forms/ endpoint.
+ */
 import React, { useState, useEffect } from 'react';
-import { User, FileText, Calendar, X, Check, AlertCircle, Save, ArrowRight, UserCheck, Building } from 'lucide-react';
+import { User, FileText, Calendar, X, Check, AlertCircle, Save, ArrowRight, UserCheck, Building, Pen } from 'lucide-react';
 import api from '../../api/client';
+import { getMySignature, applySignature } from '../../api/signatures';
+import SignatureDisplay from '../signature/SignatureDisplay';
 
 const FormField = ({ label, required, error, helper, children }) => (
     <div className="space-y-2">
@@ -51,8 +60,10 @@ export default function Form2({ workflowId, isEditable, onSave, onSubmit }) {
         agreement: {
             contactNumber: '',
             signatureDate: '',
-            signature: '',
-            fingerprint: ''
+            signatureUrl: '',
+            signatureHash: '',
+            signedBy: '',
+            signedAt: ''
         }
     });
 
@@ -60,11 +71,23 @@ export default function Form2({ workflowId, isEditable, onSave, onSubmit }) {
     const [saving, setSaving] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [hasSignature, setHasSignature] = useState(false);
+    const [applyingSignature, setApplyingSignature] = useState(false);
 
     // Load existing form data
     useEffect(() => {
         loadFormData();
+        checkUserSignature();
     }, [workflowId]);
+
+    const checkUserSignature = async () => {
+        try {
+            const data = await getMySignature();
+            setHasSignature(data.has_signature);
+        } catch (err) {
+            console.error('Failed to check signature:', err);
+        }
+    };
 
     const loadFormData = async () => {
         try {
@@ -139,6 +162,35 @@ export default function Form2({ workflowId, isEditable, onSave, onSubmit }) {
             console.error('Failed to save form:', err);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleApplySignature = async () => {
+        if (!hasSignature) {
+            alert('لطفا ابتدا امضای خود را در پروفایل خود آپلود کنید');
+            return;
+        }
+
+        try {
+            setApplyingSignature(true);
+            const result = await applySignature(workflowId, 2, 'agreement.signatureUrl');
+
+            // Update form data with signature
+            setFormData(prev => ({
+                ...prev,
+                agreement: {
+                    ...prev.agreement,
+                    signatureUrl: result.signature_url,
+                    signatureHash: result.signature_hash,
+                    signedBy: result.signed_by || '',
+                    signedAt: result.signed_at
+                }
+            }));
+        } catch (err) {
+            console.error('Failed to apply signature:', err);
+            alert('خطا در اعمال امضا');
+        } finally {
+            setApplyingSignature(false);
         }
     };
 
@@ -381,40 +433,59 @@ export default function Form2({ workflowId, isEditable, onSave, onSubmit }) {
 
                 {/* Digital Signature Section */}
                 <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
-                    <h4 className="font-semibold text-gray-800">امضاء دیجیتال</h4>
-                    
-                    <div className="space-y-4">
-                        <FormField label="امضاء (JWT Token)">
-                            <textarea
-                                value={formData.agreement.signature}
-                                onChange={(e) => handleInputChange('agreement', 'signature', e.target.value)}
-                                className="input-modern resize-none font-mono text-xs"
-                                rows={3}
-                                disabled={!isEditable}
-                                placeholder="JWT token برای امضاء دیجیتال"
-                            />
-                        </FormField>
+                    <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                        <Pen className="w-5 h-5" />
+                        امضاء دیجیتال
+                    </h4>
 
-                    </div>
+                    {formData.agreement.signatureUrl ? (
+                        /* Display existing signature */
+                        <SignatureDisplay
+                            signature={{
+                                signatureUrl: formData.agreement.signatureUrl,
+                                signatureHash: formData.agreement.signatureHash,
+                                signedBy: formData.agreement.signedBy,
+                                signedAt: formData.agreement.signedAt
+                            }}
+                            workflowId={workflowId}
+                            formNumber={2}
+                            fieldPath="agreement.signatureUrl"
+                            showVerification={true}
+                        />
+                    ) : (
+                        /* Show apply signature button */
+                        <div className="space-y-3">
+                            <p className="text-sm text-gray-600">
+                                برای تکمیل فرم، امضای دیجیتال خود را اعمال کنید
+                            </p>
 
-                    {isEditable && (
-                        <div className="flex gap-3">
-                            <button
-                                type="button"
-                                className="btn-ghost text-primary-600 hover:bg-primary-50 text-sm"
-                                onClick={() => {
-                                    // Mock digital signature - in real app, this would integrate with signature device
-                                    const mockSignature = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify({
-                                        user: formData.applicantDetails.name,
-                                        timestamp: new Date().toISOString(),
-                                        type: 'signature'
-                                    }))}`;
-                                    handleInputChange('agreement', 'signature', mockSignature);
-                                }}
-                            >
-                                امضاء دیجیتال
-                            </button>
- 
+                            {isEditable && (
+                                <button
+                                    type="button"
+                                    onClick={handleApplySignature}
+                                    disabled={applyingSignature || !hasSignature}
+                                    className="btn-primary flex items-center gap-2 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {applyingSignature ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            در حال اعمال امضا...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Pen className="w-4 h-4" />
+                                            اعمال امضای من
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            {!hasSignature && (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
+                                    <p>شما هنوز امضای دیجیتال خود را آپلود نکرده‌اید.</p>
+                                    <p className="mt-1">لطفا ابتدا به پروفایل خود بروید و امضای خود را آپلود کنید.</p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

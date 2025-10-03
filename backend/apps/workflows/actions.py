@@ -125,6 +125,24 @@ def perform_action(workflow, user, action_type: str, data: dict = None) -> dict:
                     performer=user,
                     role_code=role_code,
                 )
+
+                # For configurable workflows, also update completed_steps
+                if workflow.is_configurable():
+                    from datetime import datetime
+                    state_id = str(workflow.current_state.id)
+
+                    if state_id not in workflow.completed_steps:
+                        workflow.completed_steps[state_id] = {}
+
+                    workflow.completed_steps[state_id][str(idx)] = {
+                        'by': str(user.id),
+                        'by_username': user.username,
+                        'role_code': role_code,
+                        'at': datetime.now().isoformat(),
+                    }
+
+                    workflow.save(update_fields=['completed_steps', 'updated_at'])
+
         except IntegrityError:
             # Another approver just wrote this step - that's fine
             pass

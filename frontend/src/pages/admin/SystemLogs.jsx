@@ -1,11 +1,8 @@
 // src/pages/admin/SystemLogs.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
     Activity,
     Search,
-    Filter,
-    Download,
     RefreshCw,
     Calendar,
     User,
@@ -16,282 +13,186 @@ import {
     XCircle,
     Info,
     X,
-    Eye
+    Eye,
+    Shield,
+    Key,
+    Trash2,
+    Filter,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 import api from '../../api/client';
 
-const LogLevelBadge = ({ level }) => {
-    const configs = {
-        'INFO': { icon: Info, class: 'bg-primary-100 text-primary-700 border-primary-200' },
-        'SUCCESS': { icon: CheckCircle, class: 'bg-success-100 text-success-700 border-success-200' },
-        'WARNING': { icon: AlertCircle, class: 'bg-warning-100 text-warning-700 border-warning-200' },
-        'ERROR': { icon: XCircle, class: 'bg-error-100 text-error-700 border-error-200' },
-        'CRITICAL': { icon: XCircle, class: 'bg-error-100 text-error-700 border-error-200' }
+const ActionBadge = ({ action }) => {
+    const getActionConfig = () => {
+        const actionUpper = action?.toUpperCase() || '';
+
+        if (actionUpper.includes('CREATE') || actionUpper.includes('ADD')) {
+            return { icon: FileText, class: 'bg-success-100 text-success-700 border-success-200', label: 'ایجاد' };
+        }
+        if (actionUpper.includes('UPDATE') || actionUpper.includes('EDIT')) {
+            return { icon: Settings, class: 'bg-warning-100 text-warning-700 border-warning-200', label: 'بروزرسانی' };
+        }
+        if (actionUpper.includes('DELETE') || actionUpper.includes('REMOVE')) {
+            return { icon: Trash2, class: 'bg-error-100 text-error-700 border-error-200', label: 'حذف' };
+        }
+        if (actionUpper.includes('TOGGLE')) {
+            return { icon: RefreshCw, class: 'bg-primary-100 text-primary-700 border-primary-200', label: 'تغییر وضعیت' };
+        }
+        if (actionUpper.includes('PERMISSION')) {
+            return { icon: Key, class: 'bg-warning-100 text-warning-700 border-warning-200', label: 'دسترسی' };
+        }
+        return { icon: Activity, class: 'bg-primary-100 text-primary-700 border-primary-200', label: 'فعالیت' };
     };
 
-    const config = configs[level] || configs['INFO'];
+    const config = getActionConfig();
     const Icon = config.icon;
 
     return (
-        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${config.class}`}>
+        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold border ${config.class}`}>
             <Icon className="w-3 h-3" />
-            {level}
+            {action}
         </span>
     );
 };
 
-const LogCard = ({ log, onViewDetails }) => {
-    const getActionIcon = (action) => {
-        switch (action) {
-            case 'CREATE': case 'ADD': return FileText;
-            case 'UPDATE': case 'EDIT': return Settings;
-            case 'DELETE': case 'REMOVE': return XCircle;
-            case 'LOGIN': case 'LOGOUT': return User;
-            case 'APPROVE': case 'REJECT': return CheckCircle;
-            default: return Activity;
-        }
-    };
-
-    const ActionIcon = getActionIcon(log.action);
-    const timestamp = new Date(log.timestamp).toLocaleString('fa-IR');
+const LogCard = ({ log }) => {
+    const timestamp = new Date(log.timestamp).toLocaleString('fa-IR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 
     return (
-        <div className="card-modern p-6 hover:shadow-lg transition-all duration-200">
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-                        <ActionIcon className="w-5 h-5 text-primary-600" />
+        <div className="card-modern p-5 hover:shadow-3d-lg transition-all duration-200 border-l-4 border-l-primary-500">
+            <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start gap-4 flex-1">
+                    <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                        <Activity className="w-6 h-6 text-white" />
                     </div>
-                    <div>
-                        <h4 className="font-semibold text-text-primary">{log.message}</h4>
-                        <p className="text-sm text-text-secondary">{log.description}</p>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                            <ActionBadge action={log.action} />
+                            <span className="text-xs px-2 py-1 bg-surface-secondary rounded border border-primary-100 text-text-secondary">
+                                {log.model_name}
+                            </span>
+                        </div>
+                        <p className="text-sm text-text-primary font-medium mb-1">{log.changes}</p>
+                        {log.object_id && (
+                            <p className="text-xs text-text-secondary">
+                                شناسه: <span className="font-mono">{log.object_id}</span>
+                            </p>
+                        )}
                     </div>
                 </div>
-                
-                <LogLevelBadge level={log.level} />
             </div>
 
-            <div className="flex items-center justify-between text-sm text-text-secondary">
+            <div className="flex items-center justify-between text-xs pt-3 border-t border-primary-100">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-text-secondary">
                         <User className="w-4 h-4" />
-                        <span>{log.user || 'سیستم'}</span>
+                        <span className="font-medium">{log.user || 'سیستم'}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-text-secondary">
                         <Calendar className="w-4 h-4" />
                         <span>{timestamp}</span>
                     </div>
                 </div>
-                
-                {log.details && (
-                    <button
-                        onClick={() => onViewDetails(log)}
-                        className="btn-ghost !p-1 text-primary-600"
-                        title="مشاهده جزئیات"
-                    >
-                        <Eye className="w-4 h-4" />
-                    </button>
+
+                {log.ip_address && (
+                    <span className="text-text-secondary font-mono text-xs px-2 py-1 bg-surface-secondary rounded">
+                        {log.ip_address}
+                    </span>
                 )}
-            </div>
-
-            {log.ip_address && (
-                <div className="mt-3 pt-3 border-t border-primary-100">
-                    <span className="text-xs text-text-secondary">IP: {log.ip_address}</span>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const LogDetailsModal = ({ log, onClose }) => {
-    if (!log) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            
-            <div className="relative bg-white rounded-2xl shadow-2xl border border-primary-200 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-6 border-b border-primary-200">
-                    <h3 className="text-xl font-bold text-text-primary">جزئیات لاگ</h3>
-                    <button onClick={onClose} className="btn-ghost !p-2">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <div className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-1">پیام</label>
-                        <p className="text-text-primary">{log.message}</p>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-1">توضیحات</label>
-                        <p className="text-text-primary">{log.description}</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-1">کاربر</label>
-                            <p className="text-text-primary">{log.user || 'سیستم'}</p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-1">سطح</label>
-                            <LogLevelBadge level={log.level} />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-1">تاریخ و زمان</label>
-                            <p className="text-text-primary">{new Date(log.timestamp).toLocaleString('fa-IR')}</p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-1">آدرس IP</label>
-                            <p className="text-text-primary font-mono">{log.ip_address || 'نامشخص'}</p>
-                        </div>
-                    </div>
-
-                    {log.details && (
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-1">جزئیات فنی</label>
-                            <pre className="bg-surface border rounded-lg p-4 text-sm overflow-x-auto">
-                                {JSON.stringify(log.details, null, 2)}
-                            </pre>
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );
 };
 
 export default function SystemLogs() {
-    const navigate = useNavigate();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+
+    // Advanced filters
     const [filters, setFilters] = useState({
-        search: '',
-        level: '',
-        dateFrom: '',
-        dateTo: '',
+        action_type: '',
+        date_from: '',
+        date_to: '',
         user: ''
-    });
-    const [selectedLog, setSelectedLog] = useState(null);
-    const [pagination, setPagination] = useState({
-        page: 1,
-        totalPages: 1,
-        totalCount: 0
     });
 
     useEffect(() => {
         fetchLogs();
-    }, [filters, pagination.page]);
+    }, [currentPage]);
 
     const fetchLogs = async () => {
         try {
             setLoading(true);
-            const params = {
-                page: pagination.page,
-                search: filters.search,
-                level: filters.level,
-                date_from: filters.dateFrom,
-                date_to: filters.dateTo,
-                user: filters.user
-            };
-
-            // Remove empty filters
-            Object.keys(params).forEach(key => {
-                if (!params[key]) delete params[key];
+            const response = await api.get('/admin/logs/', {
+                params: {
+                    page: currentPage,
+                    page_size: 20,
+                    search: searchTerm || undefined,
+                    action_type: filters.action_type || undefined,
+                    date_from: filters.date_from || undefined,
+                    date_to: filters.date_to || undefined,
+                    user: filters.user || undefined
+                }
             });
 
-            const response = await api.get('/admin/system-logs/', { params });
-            
             setLogs(response.data.results || []);
-            setPagination({
-                page: pagination.page,
-                totalPages: Math.ceil(response.data.count / 20),
-                totalCount: response.data.count
-            });
+            setTotalCount(response.data.count || 0);
+            setTotalPages(response.data.total_pages || 1);
         } catch (error) {
             console.error('Error fetching logs:', error);
-            // Mock data for demo
-            setLogs([
-                {
-                    id: 1,
-                    message: 'کاربر جدید ایجاد شد',
-                    description: 'کاربر "احمد محمدی" با نقش "RE_MANAGER" اضافه شد',
-                    level: 'SUCCESS',
-                    action: 'CREATE',
-                    user: 'admin',
-                    timestamp: new Date().toISOString(),
-                    ip_address: '192.168.1.100',
-                    details: { user_id: 123, role: 'RE_MANAGER' }
-                },
-                {
-                    id: 2,
-                    message: 'تنظیمات گردش کار تغییر کرد',
-                    description: 'مراحل تایید حالت "Form3" بروزرسانی شد',
-                    level: 'INFO',
-                    action: 'UPDATE',
-                    user: 'admin',
-                    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-                    ip_address: '192.168.1.100'
-                },
-                {
-                    id: 3,
-                    message: 'خطا در اتصال به پایگاه داده',
-                    description: 'Connection timeout به MongoDB پس از 30 ثانیه',
-                    level: 'ERROR',
-                    action: 'ERROR',
-                    user: null,
-                    timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-                    details: { error: 'Connection timeout', duration: 30000 }
-                }
-            ]);
+            setLogs([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleFilterChange = (key, value) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
-        setPagination(prev => ({ ...prev, page: 1 }));
+    const handleSearch = () => {
+        setCurrentPage(1);
+        fetchLogs();
     };
 
-    const handleExport = async () => {
-        try {
-            const response = await api.get('/admin/system-logs/export/', {
-                params: filters,
-                responseType: 'blob'
-            });
-            
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `system-logs-${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (error) {
-            console.error('Error exporting logs:', error);
-            alert('خطا در دانلود لاگ‌ها');
-        }
+    const handleApplyFilters = () => {
+        setCurrentPage(1);
+        fetchLogs();
     };
 
-    const clearFilters = () => {
+    const handleClearFilters = () => {
         setFilters({
-            search: '',
-            level: '',
-            dateFrom: '',
-            dateTo: '',
+            action_type: '',
+            date_from: '',
+            date_to: '',
             user: ''
         });
+        setSearchTerm('');
+        setCurrentPage(1);
+        setTimeout(() => fetchLogs(), 100);
     };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchTerm !== undefined) {
+                handleSearch();
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     if (loading && logs.length === 0) {
         return (
             <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-lg shadow-colored mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center shadow-3d-lg mx-auto mb-4">
                     <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
                 </div>
                 <p className="text-text-secondary font-medium">در حال بارگذاری لاگ‌های سیستم...</p>
@@ -300,133 +201,155 @@ export default function SystemLogs() {
     }
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={() => navigate('/admin')}
-                        className="btn-ghost !p-2"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                    <div className="w-14 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-lg shadow-colored">
+                    <div className="w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-3d-lg">
                         <Activity className="w-7 h-7 text-white" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold text-text-primary">لاگ‌های سیستم</h1>
-                        <p className="text-text-secondary mt-1">نظارت بر فعالیت‌ها و رخدادهای سیستم</p>
+                        <p className="text-text-secondary mt-1">مشاهده فعالیت‌ها و تغییرات سیستم</p>
                     </div>
                 </div>
-                
-                <div className="flex items-center gap-3">
-                    <button 
-                        onClick={fetchLogs}
-                        className="btn-ghost flex items-center gap-2"
-                        disabled={loading}
-                    >
-                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                        <span>بروزرسانی</span>
-                    </button>
-                    <button 
-                        onClick={handleExport}
-                        className="btn-primary flex items-center gap-2"
-                    >
-                        <Download className="w-4 h-4" />
-                        <span>دانلود</span>
-                    </button>
-                </div>
+
+                <button
+                    onClick={fetchLogs}
+                    className="btn-ghost flex items-center gap-2"
+                    disabled={loading}
+                >
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    <span>بروزرسانی</span>
+                </button>
             </div>
 
-            {/* Filters */}
-            <div className="card-modern p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {/* Search */}
-                    <div className="lg:col-span-2">
-                        <div className="relative">
-                            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary" />
-                            <input
-                                type="text"
-                                value={filters.search}
-                                onChange={(e) => handleFilterChange('search', e.target.value)}
-                                placeholder="جستجو در پیام‌ها..."
-                                className="input-modern !pr-10"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Level Filter */}
-                    <div>
-                        <select
-                            value={filters.level}
-                            onChange={(e) => handleFilterChange('level', e.target.value)}
-                            className="input-modern"
-                        >
-                            <option value="">همه سطوح</option>
-                            <option value="INFO">اطلاعات</option>
-                            <option value="SUCCESS">موفقیت</option>
-                            <option value="WARNING">هشدار</option>
-                            <option value="ERROR">خطا</option>
-                            <option value="CRITICAL">بحرانی</option>
-                        </select>
-                    </div>
-
-                    {/* Date From */}
-                    <div>
+            {/* Search */}
+            <div className="card-modern p-4">
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="flex-1 relative">
+                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary" />
                         <input
-                            type="date"
-                            value={filters.dateFrom}
-                            onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                            className="input-modern"
-                            placeholder="از تاریخ"
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="جستجو در لاگ‌ها (اقدام، مدل، تغییرات)..."
+                            className="input-modern !pr-10"
                         />
                     </div>
-
-                    {/* Date To */}
-                    <div>
-                        <input
-                            type="date"
-                            value={filters.dateTo}
-                            onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                            className="input-modern"
-                            placeholder="تا تاریخ"
-                        />
+                    <button
+                        onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                        className="btn-ghost flex items-center gap-2"
+                    >
+                        <Filter className="w-4 h-4" />
+                        <span>فیلتر پیشرفته</span>
+                        {showAdvancedSearch ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+                    <div className="text-sm text-text-secondary whitespace-nowrap">
+                        {totalCount} لاگ
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-primary-100">
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-text-secondary">
-                            {pagination.totalCount} لاگ یافت شد
-                        </span>
-                        {Object.values(filters).some(v => v) && (
+                {/* Advanced Search Panel */}
+                {showAdvancedSearch && (
+                    <div className="pt-4 border-t border-primary-100 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Action Type Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-text-primary mb-2">
+                                    نوع عملیات
+                                </label>
+                                <select
+                                    value={filters.action_type}
+                                    onChange={(e) => setFilters({...filters, action_type: e.target.value})}
+                                    className="input-modern w-full"
+                                >
+                                    <option value="">همه</option>
+                                    <option value="CREATE">ایجاد</option>
+                                    <option value="UPDATE">بروزرسانی</option>
+                                    <option value="DELETE">حذف</option>
+                                    <option value="TOGGLE">تغییر وضعیت</option>
+                                    <option value="PERMISSION">دسترسی</option>
+                                    <option value="LOGIN">ورود</option>
+                                    <option value="LOGOUT">خروج</option>
+                                </select>
+                            </div>
+
+                            {/* Date From */}
+                            <div>
+                                <label className="block text-sm font-medium text-text-primary mb-2">
+                                    از تاریخ
+                                </label>
+                                <div className="relative">
+                                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+                                    <input
+                                        type="date"
+                                        value={filters.date_from}
+                                        onChange={(e) => setFilters({...filters, date_from: e.target.value})}
+                                        className="input-modern w-full !pr-10"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Date To */}
+                            <div>
+                                <label className="block text-sm font-medium text-text-primary mb-2">
+                                    تا تاریخ
+                                </label>
+                                <div className="relative">
+                                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+                                    <input
+                                        type="date"
+                                        value={filters.date_to}
+                                        onChange={(e) => setFilters({...filters, date_to: e.target.value})}
+                                        className="input-modern w-full !pr-10"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* User Filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-text-primary mb-2">
+                                    کاربر
+                                </label>
+                                <div className="relative">
+                                    <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        value={filters.user}
+                                        onChange={(e) => setFilters({...filters, user: e.target.value})}
+                                        placeholder="نام کاربری..."
+                                        className="input-modern w-full !pr-10"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Filter Actions */}
+                        <div className="flex items-center gap-3 justify-end">
                             <button
-                                onClick={clearFilters}
-                                className="btn-ghost text-sm flex items-center gap-1"
+                                onClick={handleClearFilters}
+                                className="btn-ghost flex items-center gap-2"
                             >
-                                <X className="w-3 h-3" />
+                                <X className="w-4 h-4" />
                                 <span>پاک کردن فیلترها</span>
                             </button>
-                        )}
-                    </div>
-                    
-                    {loading && (
-                        <div className="flex items-center gap-2 text-sm text-text-secondary">
-                            <div className="w-4 h-4 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-                            <span>در حال بارگذاری...</span>
+                            <button
+                                onClick={handleApplyFilters}
+                                className="btn-primary flex items-center gap-2"
+                            >
+                                <Filter className="w-4 h-4" />
+                                <span>اعمال فیلتر</span>
+                            </button>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
 
-            {/* Logs Grid */}
-            <div className="space-y-4">
+            {/* Logs List */}
+            <div className="space-y-3">
                 {logs.map(log => (
-                    <LogCard
-                        key={log.id}
-                        log={log}
-                        onViewDetails={setSelectedLog}
-                    />
+                    <LogCard key={log.id} log={log} />
                 ))}
             </div>
 
@@ -435,46 +358,65 @@ export default function SystemLogs() {
                     <Activity className="w-16 h-16 text-text-secondary mx-auto mb-4 opacity-50" />
                     <h3 className="text-lg font-semibold text-text-primary mb-2">لاگی یافت نشد</h3>
                     <p className="text-text-secondary">
-                        {Object.values(filters).some(v => v) ? 
-                            'نتیجه‌ای برای فیلترهای انتخابی یافت نشد' : 
-                            'هنوز لاگی در سیستم ثبت نشده است'
-                        }
+                        {searchTerm ? 'نتیجه‌ای برای جستجوی شما یافت نشد' : 'هنوز لاگی در سیستم ثبت نشده است'}
                     </p>
                 </div>
             )}
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                    <div className="text-sm text-text-secondary">
-                        صفحه {pagination.page} از {pagination.totalPages}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                            disabled={pagination.page === 1}
-                            className="btn-ghost !p-2 disabled:opacity-50"
-                        >
-                            قبلی
-                        </button>
-                        <button
-                            onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                            disabled={pagination.page === pagination.totalPages}
-                            className="btn-ghost !p-2 disabled:opacity-50"
-                        >
-                            بعدی
-                        </button>
+            {totalPages > 1 && (
+                <div className="card-modern p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-text-secondary">
+                            نمایش {(currentPage - 1) * 20 + 1} تا {Math.min(currentPage * 20, totalCount)} از {totalCount} لاگ
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="btn-ghost px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                قبلی
+                            </button>
+
+                            <div className="flex items-center gap-1">
+                                {[...Array(totalPages)].map((_, index) => {
+                                    const pageNum = index + 1;
+                                    if (
+                                        pageNum === 1 ||
+                                        pageNum === totalPages ||
+                                        Math.abs(pageNum - currentPage) <= 1
+                                    ) {
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`px-3 py-2 rounded-lg font-medium transition-all ${
+                                                    currentPage === pageNum
+                                                        ? 'bg-primary-500 text-white shadow-3d-lg'
+                                                        : 'bg-surface-secondary text-text-secondary hover:bg-primary-50 hover:text-text-primary border border-primary-100'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                                        return <span key={pageNum} className="px-2 text-text-secondary">...</span>;
+                                    }
+                                    return null;
+                                })}
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="btn-ghost px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                بعدی
+                            </button>
+                        </div>
                     </div>
                 </div>
-            )}
-
-            {/* Log Details Modal */}
-            {selectedLog && (
-                <LogDetailsModal
-                    log={selectedLog}
-                    onClose={() => setSelectedLog(null)}
-                />
             )}
         </div>
     );

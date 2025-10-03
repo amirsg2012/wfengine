@@ -1,64 +1,62 @@
 // src/pages/Reports.jsx
 import React, { useState, useEffect } from 'react';
-import { 
-    BarChart2, 
-    TrendingUp, 
-    Clock, 
-    Users, 
-    FileText, 
-    Calendar,
-    Download,
-    Filter
+import {
+    BarChart2,
+    TrendingUp,
+    Clock,
+    CheckCircle,
+    FileText,
+    Activity,
+    Loader,
+    ArrowUpRight,
+    Package
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
+import StateChip from '../components/letters/StateChip';
 
-const StatCard = ({ title, value, change, icon: Icon, trend = 'up' }) => (
-    <div className="card-modern p-6">
-        <div className="flex items-center justify-between mb-4">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                trend === 'up' ? 'bg-success-100' : 'bg-warning-100'
-            }`}>
-                <Icon className={`w-6 h-6 ${trend === 'up' ? 'text-success-600' : 'text-warning-600'}`} />
-            </div>
-            {change && (
-                <div className={`flex items-center gap-1 text-sm font-medium ${
-                    trend === 'up' ? 'text-success-600' : 'text-warning-600'
-                }`}>
-                    <TrendingUp className="w-4 h-4" />
-                    <span>{change}</span>
+const StatCard = ({ title, value, subtitle, icon: Icon, color = 'primary' }) => {
+    const colorClasses = {
+        primary: 'bg-primary-100 text-primary-600',
+        success: 'bg-success-100 text-success-600',
+        warning: 'bg-warning-100 text-warning-600',
+        info: 'bg-info-100 text-info-600'
+    };
+
+    return (
+        <div className="card-modern p-6">
+            <div className="flex items-center justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
+                    <Icon className="w-6 h-6" />
                 </div>
-            )}
+            </div>
+            <div>
+                <h3 className="text-3xl font-bold text-text-primary mb-1">{value}</h3>
+                <p className="text-sm font-medium text-text-secondary">{title}</p>
+                {subtitle && <p className="text-xs text-text-tertiary mt-1">{subtitle}</p>}
+            </div>
         </div>
-        <div>
-            <h3 className="text-2xl font-bold text-text-primary mb-1">{value}</h3>
-            <p className="text-sm text-text-secondary">{title}</p>
-        </div>
-    </div>
-);
+    );
+};
 
 export default function Reports() {
-    const [stats, setStats] = useState({
-        total_letters: 0,
-        pending_letters: 0,
-        completed_this_month: 0,
-        avg_processing_time: 0
-    });
+    const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [timeRange, setTimeRange] = useState('month');
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchReportData();
-    }, [timeRange]);
+    }, []);
 
     const fetchReportData = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/letters/reports/', {
-                params: { period: timeRange }
-            });
-            setStats(response.data);
+            setError(null);
+            const response = await api.get('/workflows/reports/');
+            setReportData(response.data);
         } catch (err) {
-            console.error('Error fetching report data:', err);
+            console.error('Error fetching reports:', err);
+            setError('خطا در بارگذاری گزارش‌ها');
         } finally {
             setLoading(false);
         }
@@ -66,166 +64,196 @@ export default function Reports() {
 
     if (loading) {
         return (
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6 animate-pulse">
-                <div className="skeleton-shimmer h-8 w-48"></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="skeleton-shimmer h-32 rounded-2xl"></div>
-                    ))}
-                </div>
-                <div className="skeleton-shimmer h-96 rounded-2xl"></div>
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader className="w-8 h-8 animate-spin text-primary-500" />
             </div>
         );
     }
 
+    if (error || !reportData) {
+        return (
+            <div className="p-8 text-center">
+                <p className="text-error-600">{error || 'خطا در بارگذاری گزارش‌ها'}</p>
+            </div>
+        );
+    }
+
+    const { summary, by_state, by_action_type, recent_workflows } = reportData;
+
     return (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fade-in">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-lg shadow-colored">
-                        <BarChart2 className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-bold text-text-primary">گزارشات و آمار</h1>
-                        <p className="text-text-secondary mt-1">آمار عملکرد و گزارش‌های سیستم</p>
-                    </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                    <select 
-                        value={timeRange}
-                        onChange={(e) => setTimeRange(e.target.value)}
-                        className="input-modern !py-3"
-                    >
-                        <option value="week">هفته گذشته</option>
-                        <option value="month">ماه گذشته</option>
-                        <option value="quarter">سه ماه گذشته</option>
-                        <option value="year">سال گذشته</option>
-                    </select>
-                    
-                    <button className="btn-primary flex items-center gap-2">
-                        <Download className="w-4 h-4" />
-                        <span>دانلود گزارش</span>
-                    </button>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-text-primary">گزارش‌ها و آمار</h1>
+                    <p className="text-text-secondary mt-1">آمار و گزارش‌های فعالیت شما در سیستم</p>
                 </div>
             </div>
 
-            {/* Stats Grid */}
+            {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="کل درخواست‌ها"
-                    value={stats.total_letters?.toLocaleString('fa-IR') || '0'}
-                    change="+12%"
+                    title="کل پردازش‌ها"
+                    value={summary.total_processed}
                     icon={FileText}
-                    trend="up"
+                    color="primary"
+                    subtitle="تعداد کل درخواست‌های پردازش شده"
                 />
                 <StatCard
-                    title="در انتظار تایید"
-                    value={stats.pending_letters?.toLocaleString('fa-IR') || '0'}
-                    change="-5%"
+                    title="تکمیل شده"
+                    value={summary.completed}
+                    icon={CheckCircle}
+                    color="success"
+                    subtitle={`نرخ تکمیل: ${summary.completion_rate}%`}
+                />
+                <StatCard
+                    title="در حال انجام"
+                    value={summary.in_progress}
                     icon={Clock}
-                    trend="down"
+                    color="warning"
+                    subtitle="درخواست‌های در جریان"
                 />
                 <StatCard
-                    title="تکمیل شده (ماه جاری)"
-                    value={stats.completed_this_month?.toLocaleString('fa-IR') || '0'}
-                    change="+18%"
+                    title="نرخ موفقیت"
+                    value={`${summary.completion_rate}%`}
                     icon={TrendingUp}
-                    trend="up"
-                />
-                <StatCard
-                    title="متوسط زمان پردازش"
-                    value={`${stats.avg_processing_time || 0} روز`}
-                    change="-2 روز"
-                    icon={Calendar}
-                    trend="up"
+                    color="info"
+                    subtitle="درصد تکمیل کل"
                 />
             </div>
 
-            {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Workflow Status Chart */}
-                <div className="card-modern p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-bold text-text-primary">وضعیت درخواست‌ها</h3>
-                        <Filter className="w-5 h-5 text-text-secondary" />
+                {/* State Distribution */}
+                <div className="card-modern">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center">
+                            <Package className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-text-primary">توزیع بر اساس وضعیت</h3>
+                            <p className="text-sm text-text-secondary">تعداد درخواست‌ها در هر مرحله</p>
+                        </div>
                     </div>
-                    
-                    <div className="space-y-4">
-                        {[
-                            { label: 'ثبت شده', count: 45, color: 'bg-primary-500' },
-                            { label: 'در حال بررسی', count: 23, color: 'bg-warning-500' },
-                            { label: 'تایید شده', count: 67, color: 'bg-success-500' },
-                            { label: 'رد شده', count: 8, color: 'bg-error-500' }
-                        ].map((item, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-4 h-4 rounded-full ${item.color}`}></div>
-                                    <span className="text-sm font-medium text-text-primary">{item.label}</span>
+
+                    <div className="space-y-3">
+                        {by_state && by_state.length > 0 ? (
+                            by_state.slice(0, 8).map((item, index) => (
+                                <div key={index} className="flex items-center justify-between p-3 bg-surface rounded-lg border hover:border-primary-200 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <StateChip label={item.state} size="small" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-2xl font-bold text-text-primary">{item.count}</span>
+                                        <span className="text-xs text-text-secondary">درخواست</span>
+                                    </div>
                                 </div>
-                                <span className="text-sm font-bold text-text-primary">{item.count}</span>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <p className="text-center text-text-secondary py-8">داده‌ای موجود نیست</p>
+                        )}
                     </div>
                 </div>
 
-                {/* Processing Time Chart */}
-                <div className="card-modern p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-bold text-text-primary">زمان پردازش</h3>
-                        <Users className="w-5 h-5 text-text-secondary" />
+                {/* Action Type Distribution */}
+                <div className="card-modern">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-lg bg-info-100 flex items-center justify-center">
+                            <Activity className="w-5 h-5 text-info-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-text-primary">نوع فعالیت‌ها</h3>
+                            <p className="text-sm text-text-secondary">تعداد اقدامات انجام شده</p>
+                        </div>
                     </div>
-                    
-                    <div className="space-y-4">
-                        {[
-                            { department: '\u0648\u0627\u062d\u062f \u0645\u0627\u0644\u06cc', avg_time: '2.3 \u0631\u0648\u0632', progress: 75 },
-                            { department: '\u0648\u0627\u062d\u062f \u0641\u0646\u06cc', avg_time: '1.8 \u0631\u0648\u0632', progress: 90 },
-                            { department: '\u0645\u062f\u06cc\u0631\u06cc\u062a', avg_time: '3.1 \u0631\u0648\u0632', progress: 60 },
-                            { department: '\u0645\u0646\u0627\u0628\u0639 \u0627\u0646\u0633\u0627\u0646\u06cc', avg_time: '1.5 \u0631\u0648\u0632', progress: 95 }
-                        ].map((item, index) => (
-                            <div key={index} className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-text-primary">{item.department}</span>
-                                    <span className="text-sm text-text-secondary">{item.avg_time}</span>
-                                </div>
-                                <div className="w-full bg-primary-100 rounded-full h-2">
-                                    <div 
-                                        className="bg-primary-500 h-2 rounded-full transition-all duration-300"
-                                        style={{ width: `${item.progress}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
+
+                    <div className="space-y-3">
+                        {by_action_type && by_action_type.length > 0 ? (
+                            by_action_type.map((item, index) => {
+                                const actionLabels = {
+                                    'APPROVE': 'تأیید',
+                                    'UPLOAD': 'آپلود فایل',
+                                    'COMMENT': 'نظر'
+                                };
+                                return (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-surface rounded-lg border">
+                                        <span className="text-sm font-medium text-text-primary">
+                                            {actionLabels[item.action_type] || item.action_type}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-2xl font-bold text-primary-600">{item.count}</span>
+                                            <span className="text-xs text-text-secondary">عملیات</span>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <p className="text-center text-text-secondary py-8">داده‌ای موجود نیست</p>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="card-modern p-6">
-                <h3 className="text-xl font-bold text-text-primary mb-6">فعالیت‌های اخیر</h3>
-                
-                <div className="space-y-4">
-                    {[
-                        { action: 'درخواست جدید ثبت شد', user: 'احمد خان', time: '5 دقیقه پیش', type: 'new' },
-                        { action: 'درخواست تایید شد', user: 'مریم احمدی', time: '12 ساعت ئیش', type: 'approved' },
-                    ].map((activity, index) => (
-                        <div key={index} className="flex items-center gap-4 p-3 rounded-xl bg-primary-25 border border-primary-100">
-                            <div className={`w-2 h-2 rounded-full ${
-                                activity.type === 'new' ? 'bg-primary-500' :
-                                activity.type === 'approved' ? 'bg-success-500' :
-                                activity.type === 'forwarded' ? 'bg-warning-500' :
-                                'bg-secondary-500'
-                            }`}></div>
-                            
-                            <div className="flex-1">
-                                <p className="text-sm font-medium text-text-primary">{activity.action}</p>
-                                <p className="text-xs text-text-secondary">توسط {activity.user}</p>
-                            </div>
-                            
-                            <span className="text-xs text-text-secondary">{activity.time}</span>
-                        </div>
-                    ))}
+            {/* Recent Workflows */}
+            <div className="card-modern">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-success-100 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-success-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-text-primary">آخرین درخواست‌های پردازش شده</h3>
+                        <p className="text-sm text-text-secondary">۱۰ درخواست اخیر شما</p>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b">
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-text-secondary">عنوان</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-text-secondary">متقاضی</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-text-secondary">وضعیت</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold text-text-secondary">تاریخ بروزرسانی</th>
+                                <th className="text-center py-3 px-4 text-sm font-semibold text-text-secondary">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recent_workflows && recent_workflows.length > 0 ? (
+                                recent_workflows.map((workflow) => (
+                                    <tr key={workflow.id} className="border-b hover:bg-primary-50 transition-colors">
+                                        <td className="py-3 px-4">
+                                            <div className="font-medium text-text-primary">{workflow.title}</div>
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <div className="text-sm text-text-secondary">{workflow.applicant_name || '-'}</div>
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <StateChip label={workflow.state} size="small" />
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <div className="text-sm text-text-secondary">
+                                                {new Date(workflow.updated_at).toLocaleDateString('fa-IR')}
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-center">
+                                            <Link
+                                                to={`/workflows/${workflow.id}`}
+                                                className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium"
+                                            >
+                                                مشاهده
+                                                <ArrowUpRight className="w-4 h-4" />
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="5" className="text-center py-8 text-text-secondary">
+                                        هیچ درخواستی یافت نشد
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

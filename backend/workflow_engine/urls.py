@@ -1,25 +1,11 @@
 # backend/workflow_engine/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-from apps.workflows.api.api import WorkflowViewSet,AttachmentViewSet
-from apps.workflows.api.views import WorkflowFormViewSet
-from apps.accounts.api import AuthView, MeView
-
-router = DefaultRouter()
-router.register(r"workflows", WorkflowViewSet, basename="workflows")
-router.register(r'workflow-forms', WorkflowFormViewSet, basename='workflow-forms')
-router.register(r"attachments", AttachmentViewSet, basename="attachments")
-
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/", AuthView.as_view(), name="auth"),
-    path("api/me/", MeView.as_view(), name="me"),
-    path("api/admin/", include("apps.admin.urls")),  # Add admin routes
-    path("api/", include(router.urls)),
+    # API v1 - Centralized API endpoints
+    path("api/v1/", include("api.v1.urls")),
+    # For backward compatibility, also include at /api/
+    path("api/", include("api.v1.urls")),
 ]
-
-for url_pattern in router.urls:
-    print(url_pattern.pattern, url_pattern.name)

@@ -49,8 +49,10 @@ class ClientUndertakingForm(BaseWorkflowForm):
                     "properties": {
                         "contactNumber": {"type": "string"},
                         "signatureDate": {"type": "string", "format": "date"},
-                        "signature": {"type": "string"},  # JWT
-                        "fingerprint": {"type": "string"}  # JWT
+                        "signatureUrl": {"type": "string"},  # Digital signature image URL
+                        "signatureHash": {"type": "string"},  # Signature verification hash
+                        "signedBy": {"type": "string"},  # Username who signed
+                        "signedAt": {"type": "string", "format": "date-time"}  # Timestamp
                     }
                 }
             }

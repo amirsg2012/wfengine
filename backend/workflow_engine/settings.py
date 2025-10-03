@@ -30,7 +30,10 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.workflows.apps.WorkflowsConfig",
     "apps.integrations.apps.IntegrationsConfig",
-    'apps.admin.apps.AdminConfig',
+    "apps.admin.apps.AdminConfig",
+    "apps.permissions.apps.PermissionsConfig",  # New permissions app
+    "apps.forms.apps.FormsConfig",  # Dynamic forms app
+    "apps.admin_panel",  # Admin panel with settings and monitoring
 ]
 
 
@@ -43,6 +46,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.admin_panel.middleware.UserSessionTrackingMiddleware",  # Track user sessions
 ]
 
 ROOT_URLCONF = "workflow_engine.urls"
@@ -94,7 +98,7 @@ DATABASE_ROUTERS = ["django_mongodb_backend.routers.MongoRouter"]
 
 # ==== Files: MinIO via django-storages ====
 INSTALLED_APPS += ["storages"]
-AWS_S3_ENDPOINT_URL = os.getenv("MINIO_ENDPOINT", "http://127.0.0.1:9000")
+AWS_S3_ENDPOINT_URL = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
 AWS_ACCESS_KEY_ID = os.getenv("MINIO_ACCESS_KEY", "minio")
 AWS_SECRET_ACCESS_KEY = os.getenv("MINIO_SECRET_KEY", "minio123")
 AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET", "attachments")
@@ -102,7 +106,20 @@ AWS_S3_REGION_NAME = "us-east-1"
 AWS_S3_ADDRESSING_STYLE = "path"
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_S3_VERIFY = os.getenv("MINIO_USE_SSL","0") == "1"
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+# Use localhost for browser-accessible URLs (MinIO is exposed on port 9000)
+AWS_QUERYSTRING_AUTH = False  # Disable signed URLs since bucket is public
+AWS_S3_CUSTOM_DOMAIN = f"localhost:9000/{AWS_STORAGE_BUCKET_NAME}"
+AWS_S3_URL_PROTOCOL = "http:"
+
+# Django 4.2+ STORAGES setting (replaces DEFAULT_FILE_STORAGE)
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
