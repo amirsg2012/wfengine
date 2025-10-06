@@ -69,22 +69,59 @@ class AdminDashboardViewSet(viewsets.ViewSet):
 
     @decorators.action(detail=False, methods=['get'])
     def online_users(self, request):
-        """Get currently online users"""
-        minutes = int(request.query_params.get('minutes', 15))
-        sessions = UserSession.get_online_users(minutes=minutes)
+        """
+        Get currently online users based on UserSession tracking.
 
+        Tracks ALL authenticated users (JWT, session-based, etc.) via middleware.
+        A user is considered online if they have any API activity in the last N minutes.
+        """
+        minutes = int(request.query_params.get('minutes', 5))
+        time_threshold = timezone.now() - timedelta(minutes=minutes)
+
+        # Get users with recent session activity (tracked by middleware)
+        # This includes both Django session users and JWT users
+        online_sessions = UserSession.objects.filter(
+            last_activity__gte=time_threshold
+        ).select_related('user')
+
+        # Build response with user details
         online_users = []
-        for session in sessions:
+        seen_user_ids = set()
+
+        for session in online_sessions:
+            user = session.user
+            if user.id in seen_user_ids:
+                continue  # Skip duplicates (same user, different sessions)
+
+            seen_user_ids.add(user.id)
+
+            # Get last workflow action for additional context
+            last_action = Action.objects.filter(
+                performer_id=user.id
+            ).order_by('-created_at').first()
+
+            # Determine most recent activity time
+            last_active = session.last_activity
+            if last_action and last_action.created_at > last_active:
+                last_active = last_action.created_at
+
             online_users.append({
-                'id': str(session.user.id),
-                'username': session.user.username,
-                'first_name': session.user.first_name,
-                'last_name': session.user.last_name,
-                'email': session.user.email,
+                'id': str(user.id),
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.get_full_name() or user.username,
+                'email': user.email,
+                'last_active': last_active,
+                'has_recent_activity': last_action is not None,
                 'ip_address': session.ip_address,
-                'last_activity': session.last_activity,
-                'session_duration': (timezone.now() - session.created_at).total_seconds() / 60,  # minutes
             })
+
+        # Sort by last_active (most recent first)
+        online_users.sort(
+            key=lambda x: x['last_active'] if x['last_active'] else timezone.now(),
+            reverse=True
+        )
 
         return Response({
             'count': len(online_users),

@@ -1,0 +1,450 @@
+[
+  {
+    "code": "FORM_4",
+    "name": "Form 4: Property Valuation Form",
+    "name_fa": "فرم شماره ۴: فرم ارزیابی املاک",
+    "description": "A comprehensive form for the physical and financial valuation of a property, including details about the property, occupancy, external valuations, and internal approvals.",
+    "version": 1,
+    "sections": [
+      {
+        "code": "header_info",
+        "name": "Case Information",
+        "name_fa": "اطلاعات پرونده",
+        "order": 1,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form4_fullName",
+            "name": "Full Name",
+            "name_fa": "نام و نام خانوادگی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_caseName",
+            "name": "Case Name",
+            "name_fa": "نام پرونده",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_taxpayerPhone",
+            "name": "Taxpayer's Phone",
+            "name_fa": "تلفن مؤدی",
+            "field_type": "PHONE"
+          }
+        ]
+      },
+      {
+        "code": "property_details",
+        "name": "Property Details",
+        "name_fa": "مشخصات ملک",
+        "order": 2,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form4_propertyType",
+            "name": "Property Type",
+            "name_fa": "نوع ملک",
+            "field_type": "RADIO",
+            "options": [
+              {"value": "residential", "label_fa": "مسکونی"},
+              {"value": "commercial", "label_fa": "تجاری"},
+              {"value": "office", "label_fa": "اداری"},
+              {"value": "land", "label_fa": "زمین"}
+            ]
+          },
+          {
+            "code": "form4_registrationPlateNum",
+            "name": "Registration Plate Number",
+            "name_fa": "پلاک ثبتی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_plotNum",
+            "name": "Plot Number",
+            "name_fa": "قطعه",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_address",
+            "name": "Property Address",
+            "name_fa": "نشانی ملک",
+            "field_type": "TEXTAREA"
+          },
+          {
+            "code": "form4_ownershipExtent",
+            "name": "Extent of Ownership",
+            "name_fa": "میزان مالکیت",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_buildingArea",
+            "name": "Total Building Area",
+            "name_fa": "مساحت اعیان (کل)",
+            "field_type": "NUMBER"
+          },
+          {
+            "code": "form4_deedType",
+            "name": "Deed Type",
+            "name_fa": "نوع سند",
+            "field_type": "RADIO",
+            "options": [
+              {"value": "cadastral", "label_fa": "کاداستر"},
+              {"value": "notebook", "label_fa": "دفترچه ای"},
+              {"value": "title_deed", "label_fa": "بنچاق"}
+            ]
+          },
+          {
+            "code": "form4_hasSeparatedDeed",
+            "name": "Separated Deed for Units",
+            "name_fa": "سند تفکیکی واحدها",
+            "field_type": "RADIO",
+            "options": [
+              {"value": "yes", "label_fa": "دارد"},
+              {"value": "no", "label_fa": "ندارد"}
+            ]
+          },
+          {
+            "code": "form4_buildingPermitNumber",
+            "name": "Building Permit Number",
+            "name_fa": "شماره پروانه ساختمان",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_buildingPermitDate",
+            "name": "Building Permit Date",
+            "name_fa": "تاریخ پروانه ساختمان",
+            "field_type": "DATE"
+          },
+          {
+            "code": "form4_completionCertNumber",
+            "name": "Completion Certificate Number",
+            "name_fa": "شماره پایانکار",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_completionCertDate",
+            "name": "Completion Certificate Date",
+            "name_fa": "تاریخ پایانکار",
+            "field_type": "DATE"
+          },
+          {
+            "code": "form4_amenities",
+            "name": "Amenities",
+            "name_fa": "امکانات",
+            "field_type": "CHECKBOX",
+            "options": [
+              {"value": "parking", "label_fa": "پارکینگ"},
+              {"value": "elevator", "label_fa": "آسانسور"},
+              {"value": "storage", "label_fa": "انباری"}
+            ]
+          }
+        ]
+      },
+      {
+        "code": "occupant_info",
+        "name": "Occupant Information",
+        "name_fa": "اطلاعات متصرف",
+        "order": 3,
+        "is_collapsible": true,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form4_hasOccupant",
+            "name": "Has Occupant",
+            "name_fa": "متصرف",
+            "field_type": "RADIO",
+            "options": [
+              {"value": "yes", "label_fa": "دارد"},
+              {"value": "no", "label_fa": "ندارد"}
+            ]
+          },
+          {
+            "code": "form4_occupantName",
+            "name": "Occupant's Name",
+            "name_fa": "نام متصرف",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_isTenant",
+            "name": "Is Tenant",
+            "name_fa": "مستأجر",
+            "field_type": "RADIO",
+            "options": [
+              {"value": "yes", "label_fa": "دارد"},
+              {"value": "no", "label_fa": "ندارد"}
+            ]
+          },
+          {
+            "code": "form4_tenantName",
+            "name": "Tenant's Name",
+            "name_fa": "نام مستأجر",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_leaseAgreementStatus",
+            "name": "Lease Agreement",
+            "name_fa": "اجاره نامه",
+            "field_type": "RADIO",
+            "options": [
+              {"value": "yes", "label_fa": "دارد"},
+              {"value": "no", "label_fa": "ندارد"},
+              {"value": "not_provided", "label_fa": "ارائه نشده"}
+            ]
+          },
+          {
+            "code": "form4_rentAmount",
+            "name": "Rent Amount (Rial)",
+            "name_fa": "مبلغ اجاره (ریال)",
+            "field_type": "NUMBER"
+          },
+          {
+            "code": "form4_occupancyNotes",
+            "name": "Notes",
+            "name_fa": "توضیحات",
+            "field_type": "TEXTAREA"
+          }
+        ]
+      },
+      {
+        "code": "valuation",
+        "name": "Valuation",
+        "name_fa": "ارزیابی",
+        "order": 4,
+        "is_collapsible": true,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form4_valuationSource",
+            "name": "Source of Valuation / Price Inquiry",
+            "name_fa": "منبع ارزیابی / استعلام قیمت",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_officialAppraiserName",
+            "name": "Official Appraiser's Name",
+            "name_fa": "نام کارشناس رسمی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_officialAppraiserValue",
+            "name": "Value per sq meter (Official Appraiser)",
+            "name_fa": "ارزش هر متر مربع کارشناس رسمی (ریال)",
+            "field_type": "NUMBER"
+          },
+          {
+            "code": "form4_realEstateAgencyName",
+            "name": "Real Estate Agency Name",
+            "name_fa": "نام دفتر معاملات ملکی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form4_realEstateAgencyValue",
+            "name": "Value per sq meter (Real Estate Agency)",
+            "name_fa": "ارزش هر متر مربع دفتر معاملات ملکی (ریال)",
+            "field_type": "NUMBER"
+          },
+          {
+            "code": "form4_valuationNotes",
+            "name": "Notes",
+            "name_fa": "توضیحات",
+            "field_type": "TEXTAREA"
+          }
+        ]
+      },
+      {
+        "code": "approvals",
+        "name": "Approvals",
+        "name_fa": "تاییدات",
+        "order": 5,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form4_valuationExpert",
+            "name": "Expert of Valuation and Leasing Unit",
+            "name_fa": "کارشناس واحد ارزیابی و اجاره داری",
+            "field_type": "SIGNATURE"
+          },
+          {
+            "code": "form4_valuationManager",
+            "name": "Manager of Valuation and Leasing",
+            "name_fa": "مدیر ارزیابی و اجاره داری",
+            "field_type": "SIGNATURE"
+          },
+          {
+            "code": "form4_acquisitionManager",
+            "name": "Manager of Acquisition and Monetization",
+            "name_fa": "مدیر تملیک و مولد سازی",
+            "field_type": "SIGNATURE"
+          },
+          {
+            "code": "form4_realEstateDeputy",
+            "name": "Real Estate and Construction Deputy",
+            "name_fa": "معاون املاک و ساختمان",
+            "field_type": "SIGNATURE"
+          },
+          {
+            "code": "form4_ceo",
+            "name": "CEO",
+            "name_fa": "مدیر عامل",
+            "field_type": "SIGNATURE"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "FORM_5",
+    "name": "Form 5: Anti-Money Laundering (AML) Compliance Commitment",
+    "name_fa": "فرم شماره ۵: تعهد نامه رعایت قانون مبارزه با پولشویی",
+    "description": "A questionnaire and commitment letter for natural persons to declare their personal information and commit to complying with anti-money laundering laws.",
+    "version": 1,
+    "sections": [
+      {
+        "code": "personal_info",
+        "name": "Personal Information",
+        "name_fa": "اطلاعات شخصی",
+        "order": 1,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form5_fullName",
+            "name": "Full Name",
+            "name_fa": "نام و نام خانوادگی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_fatherName",
+            "name": "Father's Name",
+            "name_fa": "نام پدر",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_birthCertificateNumber",
+            "name": "Birth Certificate Number",
+            "name_fa": "شماره شناسنامه",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_placeOfBirth",
+            "name": "Place of Birth",
+            "name_fa": "متولد",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_placeOfIssue",
+            "name": "Place of Issue",
+            "name_fa": "صادره از",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_nationalCode",
+            "name": "National Code",
+            "name_fa": "کد ملی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_occupation",
+            "name": "Occupation",
+            "name_fa": "شغل",
+            "field_type": "TEXT"
+          }
+        ]
+      },
+      {
+        "code": "contact_info",
+        "name": "Contact Information",
+        "name_fa": "اطلاعات تماس",
+        "order": 2,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form5_postalCode",
+            "name": "Postal Code",
+            "name_fa": "کد پستی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_phone",
+            "name": "Phone",
+            "name_fa": "تلفن",
+            "field_type": "PHONE"
+          },
+          {
+            "code": "form5_mobile",
+            "name": "Mobile Number",
+            "name_fa": "شماره همراه",
+            "field_type": "PHONE"
+          },
+          {
+            "code": "form5_homeAddress",
+            "name": "Residential Address",
+            "name_fa": "آدرس محل سکونت",
+            "field_type": "TEXTAREA"
+          },
+          {
+            "code": "form5_workAddress",
+            "name": "Work Address",
+            "name_fa": "آدرس محل کار",
+            "field_type": "TEXTAREA"
+          }
+        ]
+      },
+      {
+        "code": "commitment",
+        "name": "Commitment",
+        "name_fa": "تعهد نامه",
+        "order": 3,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form5_commitmentText",
+            "name": "Commitment Text",
+            "name_fa": "متن تعهد",
+            "field_type": "LABEL",
+            "default_value": "با توجه به قانون مبارزه با پولشویی مصوب ۱۳۸۶/۱۱/۰۲ مجلس شورای اسلامی و آیین نامه و دستور العمل های اجرایی آن بدین وسیله متعهد و ملتزم میشوم ضمن رعایت مواد قانون یاد شده و مقررات مربوطه از هرگونه اقدامی که منجر به پولشویی گردد خودداری نموده و همچنین به اشخاص ثالث اجازه استفاده از حسابها و خدمات بانکی و ابزارهای بانکداری الکترونیکی خود را ندهم و همچنین اعلام مینمایم اطلاعات ارائه شده بر اساس آخرین تغییرات می باشد و بعلاوه متعهد و ملتزم میشوم که هر گونه تغییر در کد و نشانی پستی ثبتی و سایر تغییرات را در کوتاه ترین زمان ممکن به مراجع قانونی ذیربط ثبت احوال و یا ثبت اسناد و املاک اطلاع داده و مستندات تغییرات را به شرکت مسکن و ساختمان جهان ارائه نمایم."
+          },
+          {
+            "code": "form5_agreement",
+            "name": "I agree to the terms above.",
+            "name_fa": "با شرایط فوق موافقم.",
+            "field_type": "CHECKBOX"
+          }
+        ]
+      },
+      {
+        "code": "signature_section",
+        "name": "Signature",
+        "name_fa": "امضا",
+        "order": 4,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form5_signatureFullName",
+            "name": "Full Name",
+            "name_fa": "نام و نام خانوادگی",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form5_date",
+            "name": "Date",
+            "name_fa": "تاریخ",
+            "field_type": "DATE"
+          },
+          {
+            "code": "form5_signature",
+            "name": "Signature",
+            "name_fa": "امضا",
+            "field_type": "SIGNATURE"
+          }
+        ]
+      }
+    ]
+  }
+]

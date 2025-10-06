@@ -4,6 +4,8 @@ from .models import (
     Workflow, Action, Attachment, Comment,
     WorkflowTemplate, WorkflowState, WorkflowStateStep, WorkflowTransition
 )
+# Import dynamic forms admin
+from .admin_dynamic_forms import *
 
 
 # ==================== Configurable Workflow System Admin ====================
@@ -69,8 +71,9 @@ class WorkflowTemplateAdmin(admin.ModelAdmin):
 class WorkflowStateStepInline(admin.TabularInline):
     model = WorkflowStateStep
     extra = 0
-    fields = ['step_number', 'name_fa', 'required_role_code', 'form_number', 'requires_signature', 'requires_comment', 'parallel_group']
+    fields = ['step_number', 'name_fa', 'required_role', 'form_number', 'requires_signature', 'requires_comment', 'parallel_group']
     show_change_link = True
+    autocomplete_fields = ['required_role']
 
 
 @admin.register(WorkflowState)
@@ -124,17 +127,18 @@ class WorkflowStateAdmin(admin.ModelAdmin):
 
 @admin.register(WorkflowStateStep)
 class WorkflowStateStepAdmin(admin.ModelAdmin):
-    list_display = ['state', 'step_number', 'name_fa', 'required_role_code', 'form_number', 'requires_signature', 'requires_comment']
+    list_display = ['state', 'step_number', 'name_fa', 'required_role', 'form_number', 'requires_signature', 'requires_comment']
     list_filter = ['state__template', 'requires_signature', 'requires_comment']
-    search_fields = ['name', 'name_fa', 'state__code', 'required_role_code']
+    search_fields = ['name', 'name_fa', 'state__code', 'required_role__code', 'required_role__name_fa']
     readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['required_role']
 
     fieldsets = (
         ('Step Information', {
             'fields': ('state', 'step_number', 'name', 'name_fa', 'description')
         }),
         ('Role & Form', {
-            'fields': ('required_role_code', 'form_number', 'form_schema')
+            'fields': ('required_role', 'form_number', 'form_schema')
         }),
         ('Requirements', {
             'fields': ('requires_signature', 'signature_field_path', 'requires_comment')

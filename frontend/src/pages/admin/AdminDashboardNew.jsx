@@ -82,8 +82,8 @@ export default function AdminDashboard() {
         fetchDashboardStats();
         fetchOnlineUsers();
 
-        // Refresh online users every 30 seconds
-        const interval = setInterval(fetchOnlineUsers, 30000);
+        // Refresh online users every 1 minute (60000ms)
+        const interval = setInterval(fetchOnlineUsers, 60000);
         return () => clearInterval(interval);
     }, []);
 
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
 
     const fetchOnlineUsers = async () => {
         try {
-            const response = await api.get('/admin/dashboard/online-users/');
+            const response = await api.get('/admin/dashboard/online_users/');
             setOnlineUsers(response.data.users || []);
         } catch (error) {
             console.error('Error fetching online users:', error);

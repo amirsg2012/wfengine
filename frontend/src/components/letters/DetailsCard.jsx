@@ -173,41 +173,6 @@ export default function DetailsCard({ data, displayMode = "user" }) {
                     <Info className="w-5 h-5 text-primary-500" />
                     <span>اطلاعات درخواست</span>
                 </h3>
-                <div className="flex items-center gap-2">
-                    {/* Toggle sensitive data visibility */}
-                    <button
-                        onClick={() => setShowSensitive(!showSensitive)}
-                        className="btn-ghost !text-xs !py-2 !px-3"
-                        title={showSensitive ? 'مخفی کردن اطلاعات سیستم' : 'نمایش اطلاعات سیستم'}
-                    >
-                        {showSensitive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        <span>{showSensitive ? 'مخفی' : 'سیستم'}</span>
-                    </button>
-                    
-                    {/* View mode toggle */}
-                    {canShowRaw && (
-                        <div className="flex items-center gap-1 bg-surface p-1 rounded-lg">
-                            <button
-                                onClick={() => setViewMode('formatted')}
-                                className={`btn-ghost !text-xs !py-1 !px-3 ${
-                                    viewMode === 'formatted' ? '!bg-white !text-primary-600 shadow-sm' : ''
-                                }`}
-                            >
-                                <List className="w-3 h-3" />
-                                <span>منظم</span>
-                            </button>
-                            <button
-                                onClick={() => setViewMode('raw')}
-                                className={`btn-ghost !text-xs !py-1 !px-3 ${
-                                    viewMode === 'raw' ? '!bg-white !text-primary-600 shadow-sm' : ''
-                                }`}
-                            >
-                                <Code className="w-3 h-3" />
-                                <span>خام</span>
-                            </button>
-                        </div>
-                    )}
-                </div>
             </div>
 
             {viewMode === 'formatted' ? (

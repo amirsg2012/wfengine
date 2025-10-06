@@ -28,6 +28,12 @@ from .admin_views import (
     RoleManagementViewSet,
     AuditLogViewSet
 )
+from .permission_views import (
+    WorkflowStateViewSet as SimplifiedWorkflowStateViewSet,
+    WorkflowStateStepViewSet,
+    StepPermissionOverrideViewSet,
+    AvailableRolesViewSet
+)
 from apps.accounts.api import AuthView, MeView, ChangePasswordView
 
 # Create router
@@ -56,6 +62,12 @@ router.register(r'admin/permissions', PermissionManagementViewSet, basename='adm
 router.register(r'admin/users', UserManagementViewSet, basename='admin-users')
 router.register(r'admin/roles', RoleManagementViewSet, basename='admin-roles')
 router.register(r'admin/logs', AuditLogViewSet, basename='admin-logs')
+
+# Simplified permission management (new system)
+router.register(r'admin/workflow-states', SimplifiedWorkflowStateViewSet, basename='admin-workflow-states')
+router.register(r'admin/workflow-steps', WorkflowStateStepViewSet, basename='admin-workflow-steps')
+router.register(r'admin/step-overrides', StepPermissionOverrideViewSet, basename='admin-step-overrides')
+router.register(r'admin/available-roles', AvailableRolesViewSet, basename='admin-available-roles')
 
 # URL patterns
 urlpatterns = [

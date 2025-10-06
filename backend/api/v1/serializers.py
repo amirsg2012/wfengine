@@ -10,7 +10,7 @@ from apps.workflows.models import (
 from apps.workflows.forms.registry import FormRegistry
 from apps.accounts.models import OrgRole, OrgRoleGroup, Membership
 from apps.accounts.signature_models import UserSignature, SignatureLog
-from apps.forms.models import DynamicForm, FormField, FormSection, FormFieldMapping, FormData
+from apps.workflows.models_dynamic_forms import DynamicForm, FormField, FormSection
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -133,82 +133,63 @@ class FormFieldSerializer(serializers.ModelSerializer):
         return obj.get_validation_rules()
 
 
-class FormFieldMappingSerializer(serializers.ModelSerializer):
-    """Serializer for form field mappings"""
+class FormFieldSerializer(serializers.ModelSerializer):
+    """Serializer for form fields"""
     id = serializers.SerializerMethodField()
-    field = FormFieldSerializer(read_only=True)
 
     class Meta:
-        model = FormFieldMapping
+        model = FormField
         fields = [
-            'id', 'field', 'order', 'is_required', 'is_readonly', 'is_hidden',
-            'default_value', 'show_if_field', 'show_if_value'
+            'id', 'code', 'label_en', 'label_fa', 'field_type',
+            'is_required', 'placeholder', 'help_text', 'display_order',
+            'options_json', 'validation', 'default_value'
         ]
 
     def get_id(self, obj):
         return str(obj.pk)
+
+    def get_validation(self, obj):
+        return obj.get_validation_schema()
 
 
 class FormSectionSerializer(serializers.ModelSerializer):
     """Serializer for form sections"""
     id = serializers.SerializerMethodField()
-    fields = serializers.SerializerMethodField()
+    fields = FormFieldSerializer(many=True, read_only=True)
 
     class Meta:
         model = FormSection
         fields = [
-            'id', 'code', 'name', 'name_fa', 'description', 'order',
-            'is_collapsible', 'is_collapsed_default', 'fields'
+            'id', 'code', 'title_en', 'title_fa', 'description',
+            'display_order', 'required_step', 'requires_signature',
+            'signature_field_code', 'signature_step', 'fields'
         ]
 
     def get_id(self, obj):
         return str(obj.pk)
-
-    def get_fields(self, obj):
-        """Get field mappings with field details"""
-        mappings = obj.field_mappings.all().order_by('order')
-        return FormFieldMappingSerializer(mappings, many=True).data
 
 
 class DynamicFormSerializer(serializers.ModelSerializer):
     """Serializer for dynamic forms"""
     id = serializers.SerializerMethodField()
-    schema = serializers.SerializerMethodField()
+    sections = FormSectionSerializer(many=True, read_only=True)
+    standalone_fields = serializers.SerializerMethodField()
 
     class Meta:
         model = DynamicForm
         fields = [
-            'id', 'code', 'name', 'name_fa', 'description',
-            'form_number', 'version', 'is_active', 'schema'
+            'id', 'form_number', 'title_en', 'title_fa', 'description',
+            'state', 'has_multiple_steps', 'total_steps', 'display_order',
+            'is_active', 'sections', 'standalone_fields'
         ]
 
     def get_id(self, obj):
         return str(obj.pk)
 
-    def get_schema(self, obj):
-        """Get complete form schema with sections and fields"""
-        return obj.get_schema()
-
-
-class FormDataSerializer(serializers.ModelSerializer):
-    """Serializer for form data submissions"""
-    id = serializers.SerializerMethodField()
-    workflow_id = serializers.SerializerMethodField()
-    form_code = serializers.CharField(source='form.code', read_only=True)
-
-    class Meta:
-        model = FormData
-        fields = [
-            'id', 'workflow_id', 'form_code', 'data',
-            'submitted_by', 'submitted_at', 'form_version'
-        ]
-        read_only_fields = ['submitted_by', 'submitted_at', 'form_version']
-
-    def get_id(self, obj):
-        return str(obj.pk)
-
-    def get_workflow_id(self, obj):
-        return str(obj.workflow.pk) if obj.workflow else None
+    def get_standalone_fields(self, obj):
+        """Get fields not in sections"""
+        fields = obj.fields.filter(section__isnull=True, is_active=True).order_by('display_order')
+        return FormFieldSerializer(fields, many=True).data
 
 
 # ==================== Workflow Serializers ====================
@@ -439,14 +420,37 @@ class DynamicFormSchemaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DynamicForm
-        fields = ['id', 'code', 'name', 'name_fa', 'description', 'version', 'sections']
+        fields = ['id', 'form_number', 'title_en', 'title_fa', 'description', 'sections']
 
     def get_id(self, obj):
         return str(obj.pk)
 
     def get_sections(self, obj):
-        """Get complete form schema"""
-        return obj.get_schema()['sections']
+        """Get all sections with their fields"""
+        sections_data = []
+        for section in obj.sections.filter(is_active=True).order_by('display_order'):
+            fields_data = []
+            for field in section.fields.filter(is_active=True).order_by('display_order'):
+                fields_data.append({
+                    'code': field.code,
+                    'label_en': field.label_en,
+                    'label_fa': field.label_fa,
+                    'field_type': field.field_type,
+                    'is_required': field.is_required,
+                    'placeholder': field.placeholder,
+                    'help_text': field.help_text,
+                    'options_json': field.options_json,
+                    'default_value': field.default_value,
+                })
+            sections_data.append({
+                'code': section.code,
+                'title_en': section.title_en,
+                'title_fa': section.title_fa,
+                'description': section.description,
+                'requires_signature': section.requires_signature,
+                'fields': fields_data
+            })
+        return sections_data
 
 
 class DynamicFormListSerializer(serializers.ModelSerializer):
@@ -456,7 +460,7 @@ class DynamicFormListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DynamicForm
-        fields = ['id', 'code', 'name', 'name_fa', 'description', 'form_number', 'version', 'is_active', 'field_count']
+        fields = ['id', 'form_number', 'title_en', 'title_fa', 'description', 'is_active', 'has_multiple_steps', 'total_steps', 'field_count']
 
     def get_id(self, obj):
         return str(obj.pk)
@@ -464,7 +468,7 @@ class DynamicFormListSerializer(serializers.ModelSerializer):
     def get_field_count(self, obj):
         count = 0
         for section in obj.sections.all():
-            count += section.field_mappings.count()
+            count += section.fields.count()
         return count
 
 
@@ -495,10 +499,19 @@ class FormDataSubmissionSerializer(serializers.Serializer):
             for field_def in section['fields']:
                 field_code = field_def['code']
                 is_required = field_def.get('is_required', False)
+                field_type = field_def.get('field_type', 'TEXT')
 
                 # Check required fields
-                if is_required and not data.get(field_code):
-                    errors[field_code] = f"Field '{field_def['name_fa']}' is required"
+                if is_required:
+                    field_value = data.get(field_code)
+
+                    # For signature fields, check if signatureHash exists
+                    if field_type == 'SIGNATURE':
+                        if not field_value or not isinstance(field_value, dict) or not field_value.get('signatureHash'):
+                            errors[field_code] = f"Field '{field_def['name_fa']}' is required"
+                    # For other fields, check if value exists
+                    elif not field_value:
+                        errors[field_code] = f"Field '{field_def['name_fa']}' is required"
 
                 # Validate against field validation rules
                 if field_code in data and data[field_code]:
@@ -525,21 +538,4 @@ class FormDataSubmissionSerializer(serializers.Serializer):
         return attrs
 
 
-class FormDataSerializer(serializers.ModelSerializer):
-    """Serializer for form data submissions"""
-    id = serializers.SerializerMethodField()
-    workflow_id = serializers.SerializerMethodField()
-    form_code = serializers.CharField(source='form.code', read_only=True)
-    submitted_by_username = serializers.CharField(source='submitted_by.username', read_only=True)
-
-    class Meta:
-        model = FormData
-        fields = ['id', 'workflow_id', 'form_code', 'data', 'submitted_by_username',
-                  'submitted_at', 'form_version']
-        read_only_fields = ['submitted_at', 'form_version']
-
-    def get_id(self, obj):
-        return str(obj.pk)
-
-    def get_workflow_id(self, obj):
-        return str(obj.workflow.pk)
+# Old FormData serializer removed - using new dynamic forms system

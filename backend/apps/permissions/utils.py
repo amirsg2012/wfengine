@@ -46,6 +46,13 @@ def check_state_permission(
     if user.is_superuser:
         return True
 
+    # VIEW permission is granted to all users with roles by default
+    # Only EDIT, APPROVE, TRANSITION, DELETE require explicit permissions
+    if permission_type == PermissionType.VIEW:
+        user_roles = get_user_roles(user)
+        if user_roles:
+            return True  # All roles can view by default
+
     # Check workflow-specific overrides first
     if check_override:
         if has_permission_override(user, workflow, permission_type):
@@ -157,6 +164,13 @@ def check_form_permission(
     if user.is_superuser:
         return True
 
+    # VIEW permission is granted to all users with roles by default
+    # Only EDIT requires explicit permissions
+    if permission_type == PermissionType.VIEW:
+        user_roles = get_user_roles(user)
+        if user_roles:
+            return True  # All roles can view forms by default
+
     # Check workflow-specific overrides
     if workflow:
         if has_permission_override(user, workflow, permission_type, form_number=form_number):
@@ -216,6 +230,13 @@ def check_form_field_permission(
     # Superusers have all permissions
     if user.is_superuser:
         return True
+
+    # VIEW permission is granted to all users with roles by default
+    # Only EDIT requires explicit field-level permissions
+    if permission_type == PermissionType.VIEW:
+        user_roles = get_user_roles(user)
+        if user_roles:
+            return True  # All roles can view fields by default
 
     # Check workflow-specific overrides
     if workflow:

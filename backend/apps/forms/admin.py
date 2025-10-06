@@ -1,9 +1,19 @@
 # apps/forms/admin.py
 """
-Admin interface for dynamic form builder
+DEPRECATED: This admin is deprecated. Use apps.workflows.admin_dynamic_forms instead.
+
+The old form builder system has been replaced with a new database-driven
+dynamic forms system located in apps.workflows.models_dynamic_forms
+
+To access the new forms:
+- Go to /admin/workflows/dynamicform/
+- Or see apps.workflows.admin_dynamic_forms
 """
 from django.contrib import admin
 from .models import FormField, DynamicForm, FormSection, FormFieldMapping, FormData
+
+# Unregister all old form models to avoid confusion
+# The new system is in apps.workflows.models_dynamic_forms
 
 
 class FormFieldMappingInline(admin.TabularInline):
@@ -21,7 +31,8 @@ class FormSectionInline(admin.StackedInline):
     show_change_link = True
 
 
-@admin.register(FormField)
+# DEPRECATED - Commented out to hide from admin
+# @admin.register(FormField)
 class FormFieldAdmin(admin.ModelAdmin):
     list_display = [
         'code', 'name_fa', 'field_type', 'is_required', 'is_computed',
@@ -81,7 +92,8 @@ class FormFieldAdmin(admin.ModelAdmin):
     usage_count.short_description = 'Used in Forms'
 
 
-@admin.register(DynamicForm)
+# DEPRECATED - Commented out to hide from admin
+# @admin.register(DynamicForm)
 class DynamicFormAdmin(admin.ModelAdmin):
     list_display = [
         'code', 'name_fa', 'form_number', 'version',
@@ -191,7 +203,8 @@ class DynamicFormAdmin(admin.ModelAdmin):
     export_schema.short_description = "Export form schemas as JSON"
 
 
-@admin.register(FormSection)
+# DEPRECATED - Commented out to hide from admin
+# @admin.register(FormSection)
 class FormSectionAdmin(admin.ModelAdmin):
     list_display = ['form', 'code', 'name_fa', 'order', 'field_count', 'is_collapsible']
     list_filter = ['form', 'is_collapsible']
@@ -214,7 +227,8 @@ class FormSectionAdmin(admin.ModelAdmin):
     field_count.short_description = 'Fields'
 
 
-@admin.register(FormFieldMapping)
+# DEPRECATED - Commented out to hide from admin
+# @admin.register(FormFieldMapping)
 class FormFieldMappingAdmin(admin.ModelAdmin):
     list_display = [
         'section', 'field', 'order', 'is_required',
@@ -239,7 +253,8 @@ class FormFieldMappingAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(FormData)
+# DEPRECATED - Commented out to hide from admin
+# @admin.register(FormData)
 class FormDataAdmin(admin.ModelAdmin):
     list_display = [
         'workflow', 'form', 'form_version',

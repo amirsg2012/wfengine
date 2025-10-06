@@ -12,6 +12,9 @@ from . import actions as act
 import json
 from datetime import datetime
 
+# Import dynamic forms models
+from .models_dynamic_forms import DynamicForm, FormSection, FormField
+
 User = get_user_model()
 
 
@@ -203,10 +206,13 @@ class WorkflowStateStep(models.Model):
     )
 
     # Role requirement
-    required_role_code = models.CharField(
-        max_length=100,
+    required_role = models.ForeignKey(
+        'accounts.OrgRole',
+        on_delete=models.CASCADE,
+        null=True,
         blank=True,
-        help_text="Role code required to approve this step"
+        related_name='workflow_steps',
+        help_text="Role required to approve this step"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

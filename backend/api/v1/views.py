@@ -14,7 +14,10 @@ from apps.workflows.models import (
     Workflow, Attachment, Comment, Action,
     WorkflowTemplate, WorkflowState, WorkflowStateStep, WorkflowTransition
 )
-from apps.forms.models import DynamicForm, FormField, FormData
+from apps.workflows.models_dynamic_forms import DynamicForm, FormSection, FormField
+from apps.workflows.dynamic_form_api import (
+    get_dynamic_form_schema, get_form_step_info, validate_form_data
+)
 from apps.workflows.actions import (
     perform_action, current_step, steps_required, step_roles,
     can_user_satisfy_step, get_workflows_pending_user_action
@@ -121,10 +124,12 @@ class WorkflowStateViewSet(viewsets.ModelViewSet):
 
 class DynamicFormViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet for dynamic forms
+    ViewSet for dynamic forms - admin-configurable forms
     Read-only - forms are managed via Django admin
     """
-    queryset = DynamicForm.objects.filter(is_active=True).order_by('form_number', 'code')
+    queryset = DynamicForm.objects.filter(is_active=True).prefetch_related(
+        'sections__fields', 'fields'
+    ).order_by('display_order', 'form_number')
     serializer_class = DynamicFormSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -136,19 +141,27 @@ class DynamicFormViewSet(viewsets.ReadOnlyModelViewSet):
             try:
                 form_number = int(form_number)
                 qs = qs.filter(form_number=form_number)
-                print(f"[DynamicFormViewSet] Filtering by form_number={form_number}, count={qs.count()}")
             except ValueError:
-                print(f"[DynamicFormViewSet] Invalid form_number: {form_number}")
-        else:
-            print(f"[DynamicFormViewSet] No form_number filter, returning all {qs.count()} forms")
+                pass
         return qs
 
-    @decorators.action(detail=True, methods=['get'])
-    def schema(self, request, pk=None):
-        """Get form schema with all sections and fields"""
-        form = self.get_object()
-        schema = form.get_schema()
+    @decorators.action(detail=False, methods=['get'], url_path='by-number/(?P<form_number>[0-9]+)')
+    def by_number(self, request, form_number=None):
+        """Get form by form_number with complete schema"""
+        schema = get_dynamic_form_schema(int(form_number))
+        if not schema:
+            return Response(
+                {"error": "Form not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
         return Response(schema)
+
+    @decorators.action(detail=False, methods=['get'], url_path='step-info/(?P<form_number>[0-9]+)/(?P<workflow_id>[^/.]+)')
+    def step_info(self, request, form_number=None, workflow_id=None):
+        """Get current step info for multi-step forms"""
+        workflow = get_object_or_404(Workflow, pk=workflow_id)
+        step_info = get_form_step_info(int(form_number), workflow)
+        return Response(step_info)
 
 
 # ==================== Workflow Views ====================
@@ -320,7 +333,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 
         # Add approval information
         cur = current_step(workflow)
-        total = steps_required(workflow.state)
+        total = steps_required(workflow)
 
         workflow_data['can_view'] = check_state_permission(user, workflow, PermissionType.VIEW)
         workflow_data['can_edit'] = check_state_permission(user, workflow, PermissionType.EDIT)
@@ -329,22 +342,22 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         workflow_data['can_delete'] = check_state_permission(user, workflow, PermissionType.DELETE)
 
         if cur < total:
-            workflow_data['can_approve'] = can_user_satisfy_step(user, workflow.state, cur)
+            workflow_data['can_approve'] = can_user_satisfy_step(user, workflow, cur)
 
         workflow_data['pending_step'] = cur if cur < total else None
         workflow_data['total_steps_in_state'] = total
-        workflow_data['pending_step_roles'] = step_roles(workflow.state, cur) if cur < total else []
+        workflow_data['pending_step_roles'] = step_roles(workflow, cur) if cur < total else []
 
     @decorators.action(detail=True, methods=["get"])
     def status(self, request, pk=None):
         """Get detailed workflow status"""
         workflow = self.get_object()
         cur = current_step(workflow)
-        total = steps_required(workflow.state)
+        total = steps_required(workflow)
 
         can_approve = False
         if cur < total:
-            can_approve = can_user_satisfy_step(request.user, workflow.state, cur)
+            can_approve = can_user_satisfy_step(request.user, workflow, cur)
 
         from apps.accounts.utils import user_role_codes
         user_roles = user_role_codes(request.user)
@@ -352,7 +365,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         # Get required approver info
         required_approver = None
         if cur < total:
-            needed_roles = step_roles(workflow.state, cur)
+            needed_roles = step_roles(workflow, cur)
             if needed_roles:
                 # Get the first required role info
                 from apps.accounts.models import OrgRole
@@ -376,7 +389,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         return Response({
             "state": workflow.state,
             "next_step_index": cur if cur < total else None,
-            "needed_roles": step_roles(workflow.state, cur) if cur < total else [],
+            "needed_roles": step_roles(workflow, cur) if cur < total else [],
             "user_roles": user_roles,
             "steps_total": total,
             "can_approve": can_approve,
@@ -394,14 +407,14 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         # Add context for each workflow
         for i, workflow in enumerate(pending_workflows):
             cur_step = current_step(workflow)
-            total_steps = steps_required(workflow.state)
+            total_steps = steps_required(workflow)
 
             serializer.data[i].update({
                 'pending_step': cur_step,
-                'pending_step_roles': step_roles(workflow.state, cur_step),
+                'pending_step_roles': step_roles(workflow, cur_step),
                 'total_steps_in_state': total_steps,
                 'urgency': 'high' if workflow.state in ['ApplicantRequest', 'CEOInstruction'] else 'medium',
-                'can_approve': can_user_satisfy_step(request.user, workflow.state, cur_step),
+                'can_approve': can_user_satisfy_step(request.user, workflow, cur_step),
             })
 
         return Response(serializer.data)
@@ -502,6 +515,74 @@ class WorkflowViewSet(viewsets.ModelViewSet):
             'completed_today': completed_today,
             'avg_processing_time': 3.5,  # Mock value
             'pending_my_action': pending_my_action
+        })
+
+    @decorators.action(detail=False, methods=["get"])
+    def online_users(self, request):
+        """
+        Get currently online users (active in last 5 minutes).
+
+        A user is considered online if they have:
+        1. Made a workflow action in the last 5 minutes, OR
+        2. Have an active session (Django session not expired)
+        """
+        from django.contrib.auth import get_user_model
+        from django.contrib.sessions.models import Session
+        from datetime import timedelta
+
+        User = get_user_model()
+        five_minutes_ago = timezone.now() - timedelta(minutes=5)
+
+        # Method 1: Get users who have performed workflow actions recently
+        recent_action_users = Action.objects.filter(
+            created_at__gte=five_minutes_ago
+        ).values_list('performer_id', flat=True).distinct()
+
+        # Method 2: Get users with active sessions
+        active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+        active_user_ids = set()
+
+        for session in active_sessions:
+            try:
+                session_data = session.get_decoded()
+                user_id = session_data.get('_auth_user_id')
+                if user_id:
+                    active_user_ids.add(user_id)
+            except:
+                continue
+
+        # Combine both methods
+        all_online_user_ids = set(recent_action_users) | active_user_ids
+
+        # Get user objects
+        online_users = User.objects.filter(id__in=all_online_user_ids)
+
+        # Serialize online users with their last activity
+        users_data = []
+        for user in online_users:
+            # Try to get last action time
+            last_action = Action.objects.filter(
+                performer_id=user.id
+            ).order_by('-created_at').first()
+
+            last_active = last_action.created_at if last_action else user.last_login
+
+            users_data.append({
+                'id': str(user.id),
+                'username': user.username,
+                'full_name': user.get_full_name() or user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'last_active': last_active,
+                'has_recent_activity': user.id in recent_action_users,
+            })
+
+        # Sort by last_active (most recent first)
+        users_data.sort(key=lambda x: x['last_active'] if x['last_active'] else timezone.now(), reverse=True)
+
+        return Response({
+            'count': len(users_data),
+            'users': users_data
         })
 
     @decorators.action(detail=False, methods=["get"])
@@ -821,13 +902,22 @@ class WorkflowFormViewSet(viewsets.ViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Update workflow with form data
-        workflow.update_from_form(form_number, form_data)
+        # Filter submitted data by editable fields only
+        # Users can only update fields they have EDIT permission for
+        filtered_data = filter_form_data_by_permissions(
+            request.user, form_number, form_data,
+            state=workflow.state, workflow=workflow,
+            permission_type=PermissionType.EDIT
+        )
+
+        # Update workflow with filtered form data
+        workflow.update_from_form(form_number, filtered_data)
 
         return Response({
             "success": True,
             "workflow_id": str(workflow.pk),
-            "form_number": form_number
+            "form_number": form_number,
+            "fields_updated": list(filtered_data.keys()) if filtered_data else []
         })
 
 

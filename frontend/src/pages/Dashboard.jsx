@@ -2,6 +2,7 @@
 import React from 'react';
 import { LayoutGrid, Plus } from 'lucide-react';
 import useInbox from '../api/useInbox';
+import { useNavigate } from 'react-router-dom';
 
 // Import your components
 import StatWidget from '../components/dashboard/StatWidget';
@@ -11,7 +12,7 @@ import InboxWidget from '../components/dashboard/InboxWidget';
 
 export default function Dashboard() {
     const { inboxData, stats, loading, error, refresh } = useInbox();
-
+    const navigate = useNavigate();
     if (error) {
         return (
             <div className="p-8 text-center">
@@ -30,11 +31,13 @@ export default function Dashboard() {
                         <LayoutGrid className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-text-primary">داشبورد اصلی</h1>
+                        <h1 className="text-3xl font-bold text-text-primary">کارتابل</h1>
                         <p className="text-text-secondary mt-1">خلاصه فعالیت‌ها و دسترسی سریع</p>
                     </div>
                 </div>
-                <button className="btn-primary flex items-center justify-center gap-2 self-start md:self-auto">
+                <button
+                onClick={() => navigate('/workflows/create')}
+                 className="btn-primary flex items-center justify-center gap-2 self-start md:self-auto">
                     <Plus className="w-5 h-5" />
                     <span>ایجاد درخواست فوری</span>
                 </button>
@@ -42,29 +45,6 @@ export default function Dashboard() {
 
             {/* Main Grid */}
             <div className="grid grid-cols-12 gap-6">
-                {/* Updated Stats */}
-                <div className="col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <StatWidget 
-                        title="نیاز به اقدام شما" 
-                        value={stats?.pending_my_action || 0} 
-                        type="pending" 
-                    />
-                    <StatWidget 
-                        title="در انتظار دیگران" 
-                        value={stats?.pending_others || 0} 
-                        type="waiting" 
-                    />
-                    <StatWidget 
-                        title="تکمیل شده" 
-                        value={stats?.completed || 0} 
-                        type="done" 
-                    />
-                    <StatWidget 
-                        title="کل درخواست‌ها" 
-                        value={stats?.total_workflows || 0} 
-                        type="total" 
-                    />
-                </div>
 
                 {/* Inbox - Now shows workflows requiring user action */}
                 <div className="col-span-12 lg:col-span-8">

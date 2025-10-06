@@ -35,27 +35,23 @@ const SignatureField = ({
     const checkUserSignature = async () => {
         try {
             const data = await getMySignature();
-            setHasSignature(data.has_signature);
+            // With hash-based signatures, users always have a signature (auto-created)
+            setHasSignature(true);
         } catch (err) {
             console.error('Failed to check signature:', err);
         }
     };
 
     const handleApplySignature = async () => {
-        if (!hasSignature) {
-            alert('لطفا ابتدا امضای خود را در پروفایل خود آپلود کنید');
-            return;
-        }
-
         try {
             setApplyingSignature(true);
             const result = await applySignature(workflowId, formNumber, fieldPath);
 
-            // Call parent callback with signature data
+            // Call parent callback with signature data (hash-based, no URL)
             if (onSignatureApplied) {
                 onSignatureApplied({
-                    signatureUrl: result.signature_url,
                     signatureHash: result.signature_hash,
+                    displayHash: result.display_hash,
                     signedBy: result.signed_by || '',
                     signedAt: result.signed_at
                 });
@@ -75,15 +71,38 @@ const SignatureField = ({
                 {label}
             </h4>
 
-            {signatureData?.signatureUrl ? (
-                /* Display existing signature */
-                <SignatureDisplay
-                    signature={signatureData}
-                    workflowId={workflowId}
-                    formNumber={formNumber}
-                    fieldPath={fieldPath}
-                    showVerification={true}
-                />
+            {signatureData?.signatureHash ? (
+                /* Display existing signature hash */
+                <div className="border border-success-200 bg-success-50 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                                <span className="text-sm font-semibold text-success-900">امضا شده</span>
+                            </div>
+                            <div className="space-y-1 text-sm text-success-800">
+                                <p>
+                                    <span className="font-medium">امضا کننده:</span> {signatureData.signedBy}
+                                </p>
+                                <p>
+                                    <span className="font-medium">کد امضا:</span>{' '}
+                                    <code className="bg-success-100 px-2 py-1 rounded text-xs font-mono">
+                                        {signatureData.displayHash || signatureData.signatureHash?.substring(0, 16)}...
+                                    </code>
+                                </p>
+                                {signatureData.signedAt && (
+                                    <p>
+                                        <span className="font-medium">تاریخ:</span>{' '}
+                                        {new Date(signatureData.signedAt).toLocaleString('fa-IR')}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-center w-12 h-12 bg-success-200 rounded-full">
+                            <Pen className="w-6 h-6 text-success-700" />
+                        </div>
+                    </div>
+                </div>
             ) : (
                 /* Show apply signature button */
                 <div className="space-y-3">
@@ -95,7 +114,7 @@ const SignatureField = ({
                         <button
                             type="button"
                             onClick={handleApplySignature}
-                            disabled={applyingSignature || !hasSignature}
+                            disabled={applyingSignature}
                             className="btn-primary flex items-center gap-2 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {applyingSignature ? (
@@ -110,13 +129,6 @@ const SignatureField = ({
                                 </>
                             )}
                         </button>
-                    )}
-
-                    {!hasSignature && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
-                            <p>شما هنوز امضای دیجیتال خود را آپلود نکرده‌اید.</p>
-                            <p className="mt-1">لطفا ابتدا به پروفایل خود بروید و امضای خود را آپلود کنید.</p>
-                        </div>
                     )}
                 </div>
             )}

@@ -1,4 +1,10 @@
 # apps/workflows/forms/form_3.py
+# ⚠️ DEPRECATED: This file is deprecated.
+# Form 3 has been migrated to DynamicForm in the database.
+# Form 3 approval steps have been migrated to StateStepPermission in the database.
+# Edit at: /admin/workflows/dynamicform/ and /admin/permissions/statesteppermission/
+# See: apps/workflows/forms/DEPRECATED.md
+
 from typing import Dict, Any
 from .base import BaseWorkflowForm
 from .registry import register_form
@@ -10,56 +16,39 @@ class PropertyStatusReviewForm(BaseWorkflowForm):
     form_number = 3
     form_title = "Property Status Review"
     
-    # Define the approval chain steps
-    APPROVAL_STEPS = {
-        1: {
-            'role': 'LC_CONTRACTS_ASSEMBLIES_LEAD',
-            'action': 'fill_legal_report',
-            'section': 'legalDeputyReport',
-            'description': 'تکمیل گزارش معاونت حقوقی'
-        },
-        2: {
-            'role': 'LC_MANAGER',
-            'action': 'approve_legal_report',
-            'section': 'legalDeputyReport',
-            'signature_field': 'headOfContractsSignature',
-            'description': 'تأیید گزارش حقوقی توسط مدیر'
-        },
-        3: {
-            'role': 'RE_TECH_URBANISM_LEAD',
-            'action': 'fill_realestate_report',
-            'section': 'realEstateDeputyReport',
-            'description': 'تکمیل گزارش معاونت املاک'
-        },
-        4: {
-            'role': 'RE_ACQUISITION_REGEN_LEAD',
-            'action': 'approve_acquisition',
-            'section': 'realEstateDeputyReport',
-            'signature_field': 'acquisitionManagerSignature',
-            'description': 'تأیید توسط مدیر تملیک'
-        },
-        5: {
-            'role': 'RE_MANAGER',
-            'action': 'approve_realestate_report',
-            'section': 'realEstateDeputyReport',
-            'signature_field': 'realEstateDeputySignature',
-            'description': 'تأیید گزارش املاک توسط معاون'
-        },
-        6: {
-            'role': 'CEO_MANAGER',
-            'action': 'ceo_final_approval',
-            'section': 'finalApproval',
-            'signature_field': 'ceoSignature',
-            'description': 'تأیید نهایی مدیرعامل'
-        },
-        7: {
-            'role': 'CHAIRMAN_OF_BOARD',
-            'action': 'chairman_final_approval',
-            'section': 'finalApproval',
-            'signature_field': 'chairmanOfTheBoardSignature',
-            'description': 'تأیید نهایی رئیس هیئت مدیره'
-        }
-    }
+    # DEPRECATED: APPROVAL_STEPS moved to database (StateStepPermission)
+    # Use migrate_form3_to_db management command to populate database
+    # All Form3 steps are now admin-configurable via /admin/permissions/statesteppermission/
+
+    @classmethod
+    def get_approval_steps(cls):
+        """Get Form3 approval steps from database (StateStepPermission)"""
+        from apps.permissions.models import StateStepPermission
+
+        steps = StateStepPermission.objects.filter(
+            state='Form3',
+            is_active=True
+        ).select_related('role').order_by('step')
+
+        # Convert to dict format for backward compatibility
+        approval_steps = {}
+        for step_perm in steps:
+            # Use 1-based indexing for compatibility
+            step_num = step_perm.step + 1
+            approval_steps[step_num] = {
+                'role': step_perm.role.code if step_perm.role else '',
+                'section': step_perm.section or '',
+                'signature_field': step_perm.signature_field or '',
+                'description': step_perm.description or '',
+                'action_type': step_perm.action_type or 'APPROVE'
+            }
+
+        return approval_steps
+
+    # For backward compatibility - returns database-driven steps
+    @property
+    def APPROVAL_STEPS(self):
+        return self.get_approval_steps()
     
     @classmethod
     def get_schema(cls) -> Dict[str, Any]:
@@ -240,23 +229,36 @@ class PropertyStatusReviewForm(BaseWorkflowForm):
     def get_current_step_info(cls, workflow) -> Dict[str, Any]:
         """Get current step information for Form 3"""
         from ..actions import current_step
-        
-        # Get current step within Form3 state
+
+        # Get current step within Form3 state (0-based)
         current_step_num = current_step(workflow)
-        
-        if current_step_num in cls.APPROVAL_STEPS:
-            step_info = cls.APPROVAL_STEPS[current_step_num].copy()
+
+        # Get approval steps from database
+        approval_steps = cls.get_approval_steps()
+
+        # Convert to 1-based for lookup
+        step_key = current_step_num + 1
+
+        if step_key in approval_steps:
+            step_info = approval_steps[step_key].copy()
             step_info['step_number'] = current_step_num
-            step_info['total_steps'] = len(cls.APPROVAL_STEPS)
+            step_info['total_steps'] = len(approval_steps)
             return step_info
-        
+
+        # Default to first step if not found
+        if 1 in approval_steps:
+            step_info = approval_steps[1].copy()
+            step_info['step_number'] = 0
+            step_info['total_steps'] = len(approval_steps)
+            return step_info
+
+        # Fallback if no steps configured
         return {
-            'step_number': 1,
-            'total_steps': len(cls.APPROVAL_STEPS),
-            'role': 'LC_CONTRACTS_ASSEMBLIES_LEAD',
-            'action': 'fill_legal_report',
-            'section': 'legalDeputyReport',
-            'description': 'تکمیل گزارش معاونت حقوقی'
+            'step_number': 0,
+            'total_steps': 0,
+            'role': '',
+            'section': '',
+            'description': 'No steps configured'
         }
     
     @classmethod
@@ -271,44 +273,54 @@ class PropertyStatusReviewForm(BaseWorkflowForm):
     
     @classmethod
     def is_step_completed(cls, workflow, step_number) -> bool:
-        """Check if a specific step is completed"""
-        if step_number not in cls.APPROVAL_STEPS:
+        """Check if a specific step is completed (step_number is 1-based)"""
+        approval_steps = cls.get_approval_steps()
+
+        if step_number not in approval_steps:
             return False
-        
-        step_info = cls.APPROVAL_STEPS[step_number]
+
+        step_info = approval_steps[step_number]
         section = step_info.get('section')
         signature_field = step_info.get('signature_field')
-        
+        action_type = step_info.get('action_type')
+
         data = workflow.data
         section_data = data.get(section, {})
-        
-        # If step has a signature field, check if it's signed
+
+        # If step requires signature (APPROVE action), check if it's signed
         if signature_field:
-            return bool(section_data.get(signature_field))
-        
-        # If step is filling a section, check if section has basic required data
-        if step_info.get('action') == 'fill_legal_report':
-            return bool(section_data.get('ownerName'))  # Basic completion check
-        elif step_info.get('action') == 'fill_realestate_report':
-            return bool(section_data.get('propertyAddress'))  # Basic completion check
-        
+            # Signature field might be nested (e.g., "legalDeputyReport.headOfContractsSignature")
+            # Extract just the field name part
+            field_name = signature_field.split('.')[-1]
+            return bool(section_data.get(field_name))
+
+        # If step is FILL action, check if section has basic required data
+        if action_type == 'FILL':
+            if section == 'legalDeputyReport':
+                return bool(section_data.get('ownerName'))  # Basic completion check
+            elif section == 'realEstateDeputyReport':
+                return bool(section_data.get('propertyAddress'))  # Basic completion check
+
         return False
     
     @classmethod
     def get_completion_status(cls, workflow) -> Dict[str, Any]:
         """Get overall completion status of Form 3"""
+        approval_steps = cls.get_approval_steps()
         completed_steps = []
         pending_steps = []
-        
-        for step_num in range(1, len(cls.APPROVAL_STEPS) + 1):
+
+        for step_num in range(1, len(approval_steps) + 1):
             if cls.is_step_completed(workflow, step_num):
                 completed_steps.append(step_num)
             else:
                 pending_steps.append(step_num)
-        
+
+        total_steps = len(approval_steps) if approval_steps else 1
+
         return {
             'completed_steps': completed_steps,
             'pending_steps': pending_steps,
-            'completion_percentage': len(completed_steps) / len(cls.APPROVAL_STEPS) * 100,
+            'completion_percentage': len(completed_steps) / total_steps * 100,
             'is_fully_completed': len(pending_steps) == 0
         }

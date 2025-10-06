@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from apps.forms.models import DynamicForm, FormField, FormData
+from apps.workflows.models_dynamic_forms import DynamicForm, FormField, FormSection
 from apps.workflows.models import Workflow
 from .serializers import (
     DynamicFormSchemaSerializer, DynamicFormListSerializer,
@@ -21,16 +21,23 @@ class DynamicFormViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet for dynamic forms
 
     GET /api/dynamic-forms/ - List all active forms
-    GET /api/dynamic-forms/{code}/ - Get form schema for rendering
+    GET /api/dynamic-forms/{id}/ - Get form schema for rendering
     """
-    queryset = DynamicForm.objects.filter(is_active=True).order_by('form_number', 'code')
+    queryset = DynamicForm.objects.filter(is_active=True).order_by('display_order', 'form_number')
     permission_classes = [permissions.IsAuthenticated]
-    lookup_field = 'code'
 
     def get_serializer_class(self):
         if self.action == 'list':
             return DynamicFormListSerializer
         return DynamicFormSchemaSerializer
+
+    def get_queryset(self):
+        """Filter by form_number if provided"""
+        qs = super().get_queryset()
+        form_number = self.request.query_params.get('form_number')
+        if form_number:
+            qs = qs.filter(form_number=form_number)
+        return qs
 
 
 class FormFieldViewSet(viewsets.ReadOnlyModelViewSet):
@@ -38,12 +45,11 @@ class FormFieldViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet for form fields (read-only for API users)
 
     GET /api/form-fields/ - List all active fields
-    GET /api/form-fields/{code}/ - Get field details
+    GET /api/form-fields/{id}/ - Get field details
     """
-    queryset = FormField.objects.filter(is_active=True).order_by('display_order', 'code')
+    queryset = FormField.objects.filter(is_active=True).order_by('display_order')
     serializer_class = FormFieldSerializer
     permission_classes = [permissions.IsAuthenticated]
-    lookup_field = 'code'
 
 
 class WorkflowFormDataViewSet(viewsets.ViewSet):
@@ -51,7 +57,7 @@ class WorkflowFormDataViewSet(viewsets.ViewSet):
     ViewSet for workflow form data submission and retrieval
 
     GET /api/workflow-form-data/{workflow_id}/ - Get all form data for workflow
-    GET /api/workflow-form-data/{workflow_id}/?form_code=X - Get specific form data
+    GET /api/workflow-form-data/{workflow_id}/?form_number=X - Get specific form data
     POST /api/workflow-form-data/{workflow_id}/submit/ - Submit form data
     """
     permission_classes = [permissions.IsAuthenticated]
@@ -59,56 +65,36 @@ class WorkflowFormDataViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         """
         Get form data for a workflow
-        Query param 'form_code' can filter to specific form
+        Query param 'form_number' can filter to specific form
         """
         workflow = get_object_or_404(Workflow, pk=pk)
 
         # Check permissions
         # TODO: Add permission check using apps.permissions
 
-        form_code = request.query_params.get('form_code')
+        form_number = request.query_params.get('form_number')
 
-        if form_code:
-            # Get specific form data
-            try:
-                form_data = FormData.objects.get(workflow=workflow, form__code=form_code)
-                serializer = FormDataSerializer(form_data)
-                return Response(serializer.data)
-            except FormData.DoesNotExist:
-                # Return empty data with form schema
-                form = get_object_or_404(DynamicForm, code=form_code, is_active=True)
+        if form_number:
+            # Get specific form data from workflow._data
+            form = get_object_or_404(DynamicForm, form_number=form_number, is_active=True)
 
-                # Pre-populate from workflow.data
-                pre_populated_data = {}
-                schema = form.get_schema()
+            # Get the form data key (e.g., "form1", "form2", "form3")
+            form_data_key = f"form{form_number}"
+            saved_data = workflow.data.get(form_data_key, {}) if workflow.data else {}
 
-                for section in schema['sections']:
-                    for field_def in section['fields']:
-                        field_code = field_def['code']
-
-                        # Check if value exists in workflow.data
-                        if field_code in workflow.data:
-                            pre_populated_data[field_code] = workflow.data[field_code]
-
-                        # Handle computed fields
-                        elif field_def.get('is_computed'):
-                            field_obj = FormField.objects.get(code=field_code)
-                            computed_value = field_obj.compute_value(workflow.data)
-                            if computed_value:
-                                pre_populated_data[field_code] = computed_value
-
-                return Response({
-                    'workflow_id': str(workflow.pk),
-                    'form_code': form_code,
-                    'data': pre_populated_data,
-                    'submitted_at': None,
-                    'form_version': form.version
-                })
+            return Response({
+                'workflow_id': str(workflow.pk),
+                'form_number': form_number,
+                'data': saved_data,
+                'submitted_at': workflow.updated_at
+            })
         else:
             # Get all form data for workflow
-            form_data_qs = FormData.objects.filter(workflow=workflow)
-            serializer = FormDataSerializer(form_data_qs, many=True)
-            return Response(serializer.data)
+            return Response({
+                'workflow_id': str(workflow.pk),
+                'data': workflow.data or {},
+                'submitted_at': workflow.updated_at
+            })
 
     @decorators.action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
@@ -119,7 +105,7 @@ class WorkflowFormDataViewSet(viewsets.ViewSet):
 
         JSON Request body:
         {
-            "form_code": "applicant_info",
+            "form_number": 1,
             "data": {
                 "first_name": "احمد",
                 "last_name": "رضایی",
@@ -128,7 +114,7 @@ class WorkflowFormDataViewSet(viewsets.ViewSet):
         }
 
         Multipart Request body:
-        - form_code: "applicant_info"
+        - form_number: 1
         - data: '{"first_name": "احمد", ...}' (JSON string)
         - file_fields: '["form1_address"]' (JSON array of field codes)
         - file_form1_address: <file>
@@ -140,18 +126,18 @@ class WorkflowFormDataViewSet(viewsets.ViewSet):
 
         # Handle multipart/form-data (file uploads)
         if request.content_type and 'multipart/form-data' in request.content_type:
-            form_code = request.POST.get('form_code')
+            form_number = request.POST.get('form_number')
             data = json.loads(request.POST.get('data', '{}'))
             file_fields = json.loads(request.POST.get('file_fields', '[]'))
 
             # Validate form exists
-            if not DynamicForm.objects.filter(code=form_code, is_active=True).exists():
+            if not DynamicForm.objects.filter(form_number=form_number, is_active=True).exists():
                 return Response(
-                    {'error': f"Form '{form_code}' not found or inactive"},
+                    {'error': f"Form {form_number} not found or inactive"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            form = DynamicForm.objects.get(code=form_code, is_active=True)
+            form = DynamicForm.objects.get(form_number=form_number, is_active=True)
 
             # Process uploaded files and save to MinIO
             from django.core.files.storage import default_storage
@@ -162,41 +148,40 @@ class WorkflowFormDataViewSet(viewsets.ViewSet):
                     uploaded_file = request.FILES[file_key]
                     # Save file to MinIO and store the path in data
                     file_path = default_storage.save(
-                        f'workflow_{workflow.id}/forms/{form_code}/{field_code}/{uploaded_file.name}',
+                        f'workflow_{workflow.id}/forms/form{form_number}/{field_code}/{uploaded_file.name}',
                         uploaded_file
                     )
                     # Store the file URL in the data
                     data[field_code] = default_storage.url(file_path)
         else:
             # Handle JSON (regular form submission)
-            serializer = FormDataSubmissionSerializer(data=request.data)
-            if not serializer.is_valid():
-                print(f"[FormDataSubmit] Validation errors: {serializer.errors}")
-                print(f"[FormDataSubmit] Request data: {request.data}")
-            serializer.is_valid(raise_exception=True)
+            form_number = request.data.get('form_number')
+            data = request.data.get('data', {})
 
-            form_code = serializer.validated_data['form_code']
-            data = serializer.validated_data['data']
-            form = DynamicForm.objects.get(code=form_code, is_active=True)
+            if not form_number:
+                return Response(
+                    {'error': 'form_number is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            form = get_object_or_404(DynamicForm, form_number=form_number, is_active=True)
 
         with transaction.atomic():
-            # Update or create form data
-            form_data, created = FormData.objects.update_or_create(
-                workflow=workflow,
-                form=form,
-                defaults={
-                    'data': data,
-                    'submitted_by': request.user,
-                    'form_version': form.version
-                }
-            )
+            # Store form data in workflow._data under form{N} key
+            form_data_key = f"form{form_number}"
+            current_data = workflow.data or {}
+            current_data[form_data_key] = data
 
-            # Merge data into workflow.data for cross-form persistence
-            workflow.update_data(data, merge=True)
+            # Update workflow data
+            workflow.update_data(current_data, merge=False)
             workflow.save()
 
-        response_serializer = FormDataSerializer(form_data)
         return Response(
-            response_serializer.data,
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            {
+                'workflow_id': str(workflow.pk),
+                'form_number': form_number,
+                'data': data,
+                'submitted_at': workflow.updated_at
+            },
+            status=status.HTTP_200_OK
         )

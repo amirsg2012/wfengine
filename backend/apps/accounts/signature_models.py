@@ -10,7 +10,8 @@ from storages.backends.s3boto3 import S3Boto3Storage
 class UserSignature(models.Model):
     """
     Digital signature for users.
-    Each user can have one active signature at a time.
+    Each user has a unique cryptographic signature hash that represents their identity.
+    No image upload required - hash is automatically generated.
     """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -19,11 +20,13 @@ class UserSignature(models.Model):
         help_text="User who owns this signature"
     )
 
-    # Signature image stored in MinIO
+    # Signature image stored in MinIO (DEPRECATED - keeping for backward compatibility)
     signature_image = models.ImageField(
         upload_to='signatures/',
         storage=S3Boto3Storage(),
-        help_text="Digital signature image (PNG with transparent background preferred)"
+        null=True,
+        blank=True,
+        help_text="DEPRECATED: Digital signature is now hash-based"
     )
 
     # Metadata
@@ -31,11 +34,11 @@ class UserSignature(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
 
-    # Signature verification hash (for integrity)
+    # Unique cryptographic signature hash for this user
     signature_hash = models.CharField(
         max_length=64,
-        blank=True,
-        help_text="SHA256 hash of signature image for verification"
+        unique=True,
+        help_text="Unique SHA256 hash representing user's digital signature"
     )
 
     class Meta:
@@ -49,36 +52,28 @@ class UserSignature(models.Model):
         return f"Signature for {self.user.username}"
 
     def save(self, *args, **kwargs):
-        """Generate signature hash on save"""
-        if self.signature_image:
+        """Generate unique signature hash on creation"""
+        if not self.signature_hash:
             import hashlib
-            # Read file and generate hash
-            self.signature_image.seek(0)
-            file_content = self.signature_image.read()
-            self.signature_hash = hashlib.sha256(file_content).hexdigest()
-            self.signature_image.seek(0)
+            import uuid
+            # Generate unique hash based on user ID and UUID
+            unique_string = f"{self.user.id}-{self.user.username}-{uuid.uuid4()}"
+            self.signature_hash = hashlib.sha256(unique_string.encode()).hexdigest()
 
         super().save(*args, **kwargs)
 
     @property
     def signature_url(self):
-        """Get the URL of the signature image"""
-        if self.signature_image:
-            return self.signature_image.url
+        """DEPRECATED: Returns None as signatures are now hash-based"""
         return None
 
+    def get_display_hash(self):
+        """Get shortened hash for display (first 8 characters)"""
+        return self.signature_hash[:8] if self.signature_hash else ""
+
     def verify_integrity(self):
-        """Verify signature image hasn't been tampered with"""
-        if not self.signature_image or not self.signature_hash:
-            return False
-
-        import hashlib
-        self.signature_image.seek(0)
-        file_content = self.signature_image.read()
-        current_hash = hashlib.sha256(file_content).hexdigest()
-        self.signature_image.seek(0)
-
-        return current_hash == self.signature_hash
+        """Verify signature hash exists and is valid"""
+        return bool(self.signature_hash and len(self.signature_hash) == 64)
 
 
 class SignatureLog(models.Model):
@@ -104,8 +99,8 @@ class SignatureLog(models.Model):
     )
 
     # Signature data at time of signing
-    signature_url = models.URLField(help_text="URL of signature image at time of signing")
-    signature_hash = models.CharField(max_length=64, help_text="Hash for verification")
+    signature_url = models.URLField(null=True, blank=True, help_text="DEPRECATED: No longer used")
+    signature_hash = models.CharField(max_length=64, help_text="User's signature hash at time of signing")
 
     # Metadata
     signed_at = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,570 @@
+[
+  {
+    "code": "FORM_1",
+    "name": "Form 1: Specifications and Documents Submission",
+    "name_fa": "فرم شماره ۱: فرم مشخصات و ارائه مدارک",
+    "description": "A form to collect applicant personal details, contact information, and a checklist of submitted property documents.",
+    "version": 1,
+    "sections": [
+      {
+        "code": "personal_info",
+        "name": "Personal Information",
+        "name_fa": "اطلاعات شخصی",
+        "description": "",
+        "order": 1,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form1_firstName",
+            "name": "First Name",
+            "name_fa": "نام [cite: 122]",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form1_lastName",
+            "name": "Last Name",
+            "name_fa": "نام خانوادگی [cite: 123]",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form1_nationalCode",
+            "name": "National Code",
+            "name_fa": "کد ملی [cite: 124]",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form1_birthCertificateNumber",
+            "name": "Birth Certificate Number",
+            "name_fa": "شماره شناسنامه [cite: 123]",
+            "field_type": "TEXT"
+          }
+        ]
+      },
+      {
+        "code": "contact_info",
+        "name": "Contact Information",
+        "name_fa": "اطلاعات تماس",
+        "description": "",
+        "order": 2,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form1_address",
+            "name": "Residential Address",
+            "name_fa": "نشانی محل سکونت [cite: 125]",
+            "field_type": "TEXTAREA"
+          },
+          {
+            "code": "form1_landline",
+            "name": "Landline Number with Area Code",
+            "name_fa": "شماره تماس ثابت به همراه کد شهر [cite: 127]",
+            "field_type": "PHONE"
+          },
+          {
+            "code": "form1_mobile",
+            "name": "Mobile",
+            "name_fa": "همراه [cite: 129]",
+            "field_type": "PHONE"
+          },
+          {
+            "code": "form1_emergencyContact",
+            "name": "Emergency Contact Numbers",
+            "name_fa": "شماره تلفنهای تماس ضروری [cite: 126]",
+            "field_type": "TEXT"
+          }
+        ]
+      },
+      {
+        "code": "ownership_info",
+        "name": "Position and Ownership Type",
+        "name_fa": "سمت و نوع مالکیت [cite: 130]",
+        "description": "",
+        "order": 3,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form1_applicantType",
+            "name": "Applicant Type",
+            "name_fa": "سمت",
+            "field_type": "RADIO",
+            "options": [
+              { "value": "owner", "label_fa": "مالک [cite: 131]" },
+              { "value": "representative", "label_fa": "نماینده [cite: 137]" }
+            ]
+          },
+          {
+            "code": "form1_ownershipType",
+            "name": "Ownership Type",
+            "name_fa": "نوع مالکیت",
+            "field_type": "RADIO",
+            "options": [
+              { "value": "separate", "label_fa": "مفروز [cite: 132]" },
+              { "value": "joint", "label_fa": "مشاع [cite: 138]" }
+            ]
+          }
+        ]
+      },
+      {
+        "code": "submitted_documents",
+        "name": "Documents Submitted by the Taxpayer",
+        "name_fa": "مدارک ارائه شده توسط مودی [cite: 139]",
+        "description": "",
+        "order": 4,
+        "is_collapsible": true,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form1_ownershipDocType",
+            "name": "Ownership Documents",
+            "name_fa": "اسناد مالکیت [cite: 140]",
+            "field_type": "RADIO",
+            "options": [
+              { "value": "notebook", "label_fa": "دفترچه ای [cite: 141]" },
+              { "value": "single_page", "label_fa": "تک برگ [cite: 164]" }
+            ]
+          },
+          {
+            "code": "form1_hasTitleDeed",
+            "name": "Title Deed",
+            "name_fa": "بنچاق [cite: 142]",
+            "field_type": "CHECKBOX"
+          },
+          {
+            "code": "form1_hasBuildingPermit",
+            "name": "Building Permit",
+            "name_fa": "پروانه ساختمانی [cite: 143]",
+            "field_type": "CHECKBOX"
+          },
+          {
+            "code": "form1_buildingPermitDate",
+            "name": "Permit Date",
+            "name_fa": "مورخ [cite: 144]",
+            "field_type": "DATE"
+          },
+          {
+            "code": "form1_hasNoViolationCert",
+            "name": "Certificate of No Violation",
+            "name_fa": "گواهی عدم خلاف [cite: 145]",
+            "field_type": "CHECKBOX"
+          },
+          {
+            "code": "form1_noViolationCertDate",
+            "name": "Certificate Date",
+            "name_fa": "مورخ [cite: 146]",
+            "field_type": "DATE"
+          },
+          {
+            "code": "form1_hasCompletionCert",
+            "name": "Building Completion Certificate",
+            "name_fa": "گواهی پایانکار ساختمانی [cite: 147]",
+            "field_type": "CHECKBOX"
+          },
+          {
+            "code": "form1_completionCertDate",
+            "name": "Certificate Date",
+            "name_fa": "مورخ [cite: 148]",
+            "field_type": "DATE"
+          },
+          {
+            "code": "form1_representationDocType",
+            "name": "Representation Document",
+            "name_fa": "مدرک نمایندگی [cite: 149]",
+            "field_type": "RADIO",
+             "options": [
+              { "value": "legal", "label_fa": "قانونی [cite: 150]" },
+              { "value": "contractual", "label_fa": "قراردادی [cite: 167]" }
+            ]
+          },
+          {
+            "code": "form1_hasImageFiles",
+            "name": "Image Files",
+            "name_fa": "فایل تصاویر [cite: 151]",
+            "field_type": "RADIO",
+            "options": [
+              { "value": "yes", "label_fa": "دارد [cite: 152]" },
+              { "value": "no", "label_fa": "ندارد [cite: 153]" }
+            ]
+          },
+          {
+            "code": "form1_registrationPlateNumber",
+            "name": "Registration Plate Number",
+            "name_fa": "پلاک ثبتی [cite: 166]",
+            "field_type": "TEXT"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "FORM_2",
+    "name": "Form 2: Taxpayer Commitment Form",
+    "name_fa": "فرم شماره ۲: فرم تعهد مودی [cite: 7, 8]",
+    "description": "A commitment form for the taxpayer to request the offsetting of their specified properties against municipality fees, subject to a list of conditions.",
+    "version": 1,
+    "sections": [
+      {
+        "code": "applicant_info",
+        "name": "Applicant Information",
+        "name_fa": "اطلاعات متقاضی",
+        "description": "",
+        "order": 1,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form2_applicantName",
+            "name": "Applicant Name",
+            "name_fa": "اینجانب [cite: 9]",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form2_fatherName",
+            "name": "Father's Name",
+            "name_fa": "فرزند [cite: 11]",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form2_nationalCode",
+            "name": "National Code",
+            "name_fa": "کد ملی [cite: 11]",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form2_powerOfAttorneyNum",
+            "name": "Official Power of Attorney Number",
+            "name_fa": "وکالت نامه رسمی شماره [cite: 10]",
+            "field_type": "TEXT"
+          },
+          {
+            "code": "form2_notaryOfficeNum",
+            "name": "Notary Public Office Number",
+            "name_fa": "دفتر اسناد رسمی شماره [cite: 14]",
+            "field_type": "TEXT"
+          }
+        ]
+      },
+      {
+        "code": "property_info",
+        "name": "Property Information",
+        "name_fa": "اطلاعات ملک",
+        "description": "",
+        "order": 2,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "form2_propertyAddress",
+            "name": "Property Address",
+            "name_fa": "آدرس [cite: 10]",
+            "field_type": "TEXTAREA"
+          },
+          {
+            "code": "form2_registrationPlateNum",
+            "name": "Registration Plate Number",
+            "name_fa": "پلاک ثبتی [cite: 14]",
+            "field_type": "TEXT"
+          }
+        ]
+      },
+      {
+        "code": "terms_and_conditions",
+        "name": "Terms and Conditions",
+        "name_fa": "شرایط",
+        "description": "",
+        "order": 3,
+        "is_collapsible": true,
+        "is_collapsed_default": false,
+        "fields": [
+          {
+            "code": "term1",
+            "name": "Valuation",
+            "name_fa": "ارجاع ارزیابی ملک معرفی شده به کانون کارشناسان رسمی دادگستری یا مرکز مشاورین قوه قضائیه [cite: 23]",
+            "field_type": "LABEL"
+          },
+          {
+            "code": "term2",
+            "name": "Acceptance/Rejection of Valuation",
+            "name_fa": "مخیر بودن شرکت و مؤدی در پذیرش یا رد نظریه هیأت کارشناسان رسمی دادگستری [cite: 24]",
+            "field_type": "LABEL"
+          },
+          {
+            "code": "term3",
+            "name": "Valuation Fee",
+            "name_fa": "پرداخت حق الزحمه کارشناسان رسمی دادگستری طبق تعرفه [cite: 24]",
+            "field_type": "LABEL"
+          },
+          {
+            "code": "term4",
+            "name": "Brokerage Fee",
+            "name_fa": "پرداخت ۳٪ حق الزحمه کارگزاری شرکت بر اساس ارزش کل ملک طبق نظریه کارشناسان رسمی دادگستری [cite: 25]",
+            "field_type": "LABEL"
+          },
+          {
+            "code": "term5",
+            "name": "Discount Sharing",
+            "name_fa": "تعلق نیمی از کل تخفیف موضوع مصوبه شورای اسلامی شهر تهران و در مورد آیتمهای بدون تخفیف به میزان ده درصد مبلغ برای هر آیتم برای بانک شهر [cite: 26]",
+            "field_type": "LABEL"
+          },
+          {
+            "code": "term6",
+            "name": "Deposit/Withdrawal Conditions",
+            "name_fa": "شرایط واریز برداشت پس از صلحنامه به شرح ذیل اعلام می گردد [cite: 26]",
+            "field_type": "TEXTAREA",
+            "default_value": "۲۵٪ زمان انعقاد و امضاء صلحنامه [cite: 27]\n۲۵٪ زمان تحویل ملک از سوی مؤدی به شرکت مسکن و ساختمان جهان [cite: 27]\n۲۰٪ ارائه پایانکار ملک [cite: 28]\n۱۰٪ زمان پرداخت حق کارگزاری بانک شهر و سهم شرکت [cite: 29]\n۲۰٪ زمان نقل و انتقال در دفترخانه [cite: 30]"
+          }
+        ]
+      },
+      {
+        "code": "declarations",
+        "name": "Declarations",
+        "name_fa": "تاییدیه",
+        "description": "",
+        "order": 4,
+        "is_collapsible": false,
+        "is_collapsed_default": false,
+        "fields":[
+            {
+                "code": "form2_contactNumber",
+                "name": "Contact Number",
+                "name_fa": "شماره تماس [cite: 31]",
+                "field_type": "PHONE"
+            },
+            {
+                "code": "form2_date",
+                "name": "Date",
+                "name_fa": "تاریخ [cite: 33]",
+                "field_type": "DATE"
+            },
+            {
+                "code": "form2_signature",
+                "name": "Signature",
+                "name_fa": "امضا [cite: 32]",
+                "field_type": "SIGNATURE"
+            }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "FORM_3",
+    "name": "Form 3: Property Status Review",
+    "name_fa": "فرم شماره ۳: بررسی وضعیت املاک مودی [cite: 39, 40]",
+    "description": "An internal multi-departmental form to review the legal and physical status of a property, culminating in management approval to proceed.",
+    "version": 1,
+    "sections": [
+        {
+            "code": "request_info",
+            "name": "Request Information",
+            "name_fa": "اطلاعات درخواست",
+            "order": 1,
+            "fields": [
+                {
+                    "code": "form3_requestNumber",
+                    "name": "Request Number",
+                    "name_fa": "شماره [cite: 41]",
+                    "field_type": "TEXT"
+                },
+                {
+                    "code": "form3_requestDate",
+                    "name": "Date",
+                    "name_fa": "مورخ [cite: 42]",
+                    "field_type": "DATE"
+                },
+                {
+                    "code": "form3_taxpayer",
+                    "name": "Taxpayer",
+                    "name_fa": "مودی [cite: 43]",
+                    "field_type": "TEXT"
+                }
+            ]
+        },
+      {
+        "code": "legal_deputy_report",
+        "name": "Legal Deputy Report",
+        "name_fa": "گزارش معاونت حقوقی [cite: 46]",
+        "order": 2,
+        "fields": [
+          {
+            "code": "form3_isMortgaged",
+            "name": "Is in Mortgage",
+            "name_fa": "در رهن [cite: 49]",
+            "field_type": "RADIO",
+            "options": [
+              { "value": "yes", "label_fa": "می باشد" },
+              { "value": "no", "label_fa": "نمی باشد" }
+            ]
+          },
+          {
+            "code": "form3_isSinglePageDeed",
+            "name": "Is Single-Page Deed",
+            "name_fa": "سند تک برگ [cite: 49]",
+            "field_type": "RADIO",
+            "options": [
+              { "value": "yes", "label_fa": "می باشد" },
+              { "value": "no", "label_fa": "نمی باشد" }
+            ]
+          },
+          {
+            "code": "form3_hasTransferAuthority",
+            "name": "Applicant has legal authority for transfer",
+            "name_fa": "با بررسی اسناد و مدارک متقاضی اختیارات قانونی برای انتقال را دارد [cite: 50]",
+            "field_type": "CHECKBOX"
+          },
+          {
+            "code": "form3_isLegalTransferPermissible",
+            "name": "Transfer of property to Shahr Bank is permissible",
+            "name_fa": "با بررسی اسناد مالکیت انتقال ملک به بانک شهر بلامانع است [cite: 51]",
+            "field_type": "CHECKBOX"
+          },
+          {
+            "code": "form3_poaApproved",
+            "name": "Irrevocable official power of attorney",
+            "name_fa": "وکالتنامه رسمی بلاعزل [cite: 58]",
+            "field_type": "RADIO",
+            "options": [
+                {"value": "approved", "label_fa": "مورد تایید است"},
+                {"value": "not_approved", "label_fa": "مورد تایید نیست"}
+            ]
+          },
+          {
+            "code": "form3_ownershipVerified",
+            "name": "Ownership Verification",
+            "name_fa": "احراز مالکیت [cite: 58]",
+            "field_type": "RADIO",
+            "options": [
+                {"value": "clear", "label_fa": "بلامانع است"},
+                {"value": "has_obstacle", "label_fa": "مانع دارد"}
+            ]
+          },
+          {
+            "code": "form3_hasTransactionBan",
+            "name": "Property has transaction ban",
+            "name_fa": "پلاک ممنوع معامله [cite: 58]",
+            "field_type": "RADIO",
+            "options": [
+                {"value": "yes", "label_fa": "است"},
+                {"value": "no", "label_fa": "نیست"}
+            ]
+          },
+          {
+            "code": "form3_legalRemarks",
+            "name": "Explanations",
+            "name_fa": "توضیحات [cite: 65]",
+            "field_type": "TEXTAREA"
+          }
+        ]
+      },
+      {
+        "code": "real_estate_deputy_report",
+        "name": "Real Estate and Construction Deputy Report",
+        "name_fa": "گزارش معاونت املاک و ساختمان [cite: 68]",
+        "order": 3,
+        "fields": [
+            {
+                "code": "form3_propertyRegNum",
+                "name": "Registration Plate Number",
+                "name_fa": "پلاک ثبتی [cite: 70]",
+                "field_type": "TEXT"
+            },
+            {
+                "code": "form3_plotNum",
+                "name": "Plot Number",
+                "name_fa": "شماره قطعه [cite: 70]",
+                "field_type": "TEXT"
+            },
+            {
+                "code": "form3_plotArea",
+                "name": "Plate Area (sq m)",
+                "name_fa": "مساحت پلاک متر مربع [cite: 70]",
+                "field_type": "NUMBER"
+            },
+            {
+                "code": "form3_propertyAddress",
+                "name": "Address",
+                "name_fa": "آدرس [cite: 70]",
+                "field_type": "TEXTAREA"
+            },
+            {
+                "code": "form3_landUse",
+                "name": "Land Use Type",
+                "name_fa": "نوع کاربری [cite: 71]",
+                "field_type": "TEXT"
+            },
+            {
+                "code": "form3_hasTenant",
+                "name": "Has Tenant",
+                "name_fa": "مستاجر [cite: 84]",
+                "field_type": "RADIO",
+                "options": [{"value":"yes", "label_fa":"دارد [cite: 84]"},{"value":"no", "label_fa":"ندارد [cite: 85]"}]
+            },
+            {
+                "code": "form3_hasConflictingClaim",
+                "name": "Has Conflicting Claim",
+                "name_fa": "معارض [cite: 100]",
+                "field_type": "RADIO",
+                "options": [{"value":"yes", "label_fa":"دارد [cite: 100]"},{"value":"no", "label_fa":"ندارد [cite: 101]"}]
+            },
+            {
+                "code": "form3_realEstateRemarks",
+                "name": "Explanations",
+                "name_fa": "توضیحات [cite: 106]",
+                "field_type": "TEXTAREA"
+            }
+        ]
+      },
+      {
+        "code": "manager_approvals",
+        "name": "Manager Approvals",
+        "name_fa": "تاییدیه مدیران",
+        "order": 4,
+        "fields": [
+            {
+                "code": "form3_contractsHeadApproval",
+                "name": "Head of Contracts and Assemblies Approval",
+                "name_fa": "رئیس امور قراردادها و مجامع [cite: 66]",
+                "field_type": "SIGNATURE"
+            },
+            {
+                "code": "form3_legalDeputyHeadApproval",
+                "name": "Head of Legal and Contracts Deputy Approval",
+                "name_fa": "سرپرست معاونت حقوقی و امور قراردادها [cite: 67]",
+                "field_type": "SIGNATURE"
+            },
+            {
+                "code": "form3_urbanPlanningDirApproval",
+                "name": "Director of Urban Planning and Architecture Approval",
+                "name_fa": "مدیر شهرسازی و معماری [cite: 107]",
+                "field_type": "SIGNATURE"
+            },
+            {
+                "code": "form3_acquisitionDirApproval",
+                "name": "Director of Acquisition and Monetization Approval",
+                "name_fa": "مدیر تملیک و مولد سازی [cite: 108]",
+                "field_type": "SIGNATURE"
+            },
+            {
+                "code": "form3_realEstateDeputyApproval",
+                "name": "Real Estate and Construction Deputy Approval",
+                "name_fa": "معاون املاک و ساختمان [cite: 109]",
+                "field_type": "SIGNATURE"
+            },
+            {
+                "code": "form3_boardChairmanApproval",
+                "name": "Chairman of the Board Approval",
+                "name_fa": "رئیس هیأت مدیره [cite: 112]",
+                "field_type": "SIGNATURE"
+            },
+            {
+                "code": "form3_ceoApproval",
+                "name": "CEO Approval",
+                "name_fa": "مدیر عامل [cite: 113]",
+                "field_type": "SIGNATURE"
+            }
+        ]
+      }
+    ]
+  }
+]

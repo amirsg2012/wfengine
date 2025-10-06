@@ -1,4 +1,9 @@
 # apps/workflows/forms/registry.py
+# ⚠️ DEPRECATED: This module is deprecated. Use DynamicForm from database instead.
+# See: apps/workflows/models_dynamic_forms.py
+# Migration guide: apps/workflows/forms/DEPRECATED.md
+
+import warnings
 from typing import Any, Dict, Type, Optional
 from .base import BaseWorkflowForm
 
@@ -26,7 +31,15 @@ class FormRegistry:
 
         If use_dynamic_forms is True, returns None (forms should use DynamicForm API)
         Otherwise returns legacy form class
+
+        DEPRECATED: Use DynamicForm.objects.get(form_number=X) instead
         """
+        warnings.warn(
+            "FormRegistry.get_form() is deprecated. Use DynamicForm.objects.get(form_number=X) instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
         if cls._use_dynamic_forms:
             # Dynamic forms are now the default
             # Legacy forms still available for backward compatibility

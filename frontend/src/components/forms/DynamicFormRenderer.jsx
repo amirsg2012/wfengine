@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Loader, Save, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '../../api/client';
+import SignatureField from '../signature/SignatureField';
 
 /**
  * DynamicFormRenderer
@@ -77,9 +78,9 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
 
                 // Log all form_numbers to debug
                 console.log(`[DynamicFormRenderer] All forms:`, response.data.map(f => ({
-                    code: f.code,
+                    id: f.id,
                     form_number: f.form_number,
-                    formNumber_from_api: f.formNumber,
+                    title_fa: f.title_fa,
                     form_number_type: typeof f.form_number,
                     formNumber_prop: formNumber,
                     formNumber_type: typeof formNumber,
@@ -100,13 +101,13 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
 
                 console.log(`[DynamicFormRenderer] Selected form:`, matchingForm);
 
-                // Fetch full schema
-                const schemaResponse = await api.get(`/dynamic-forms/${matchingForm.code}/`);
+                // Fetch full schema using form ID
+                const schemaResponse = await api.get(`/dynamic-forms/${matchingForm.id}/`);
                 console.log(`[DynamicFormRenderer] Schema response:`, schemaResponse.data);
                 setSchema(schemaResponse.data);
 
-                // Also fetch form data with the form code
-                fetchFormDataWithCode(matchingForm.code);
+                // Also fetch form data with the form ID
+                fetchFormDataWithCode(matchingForm.id);
             } else {
                 // No dynamic form found - this is expected if forms haven't been created yet
                 console.warn(`No dynamic form found for form_number=${formNumber}. Use legacy forms or create dynamic forms in admin.`);
@@ -135,12 +136,12 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
         }
     };
 
-    const fetchFormDataWithCode = async (formCode) => {
+    const fetchFormDataWithCode = async (formId) => {
         try {
             setLoading(true);
-            console.log(`[DynamicFormRenderer] Fetching form data for formCode=${formCode}`);
-            // Fetch existing form data
-            const response = await api.get(`/workflow-form-data/${workflowId}/?form_code=${formCode}`);
+            console.log(`[DynamicFormRenderer] Fetching form data for formId=${formId}`);
+            // Fetch existing form data using form number instead of code
+            const response = await api.get(`/workflow-form-data/${workflowId}/?form_number=${formNumber}`);
             console.log(`[DynamicFormRenderer] Form data response:`, response.data);
 
             if (response.data && response.data.data && Object.keys(response.data.data).length > 0) {
@@ -350,7 +351,7 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
             if (hasFiles) {
                 // Use FormData for file uploads
                 const formDataToSend = new FormData();
-                formDataToSend.append('form_code', schema.code);
+                formDataToSend.append('form_number', formNumber);
 
                 // Separate files and regular data
                 const regularData = {};
@@ -391,7 +392,7 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
                 });
 
                 await api.post(`/workflow-form-data/${workflowId}/submit/`, {
-                    form_code: schema.code,
+                    form_number: formNumber,
                     data: cleanedData
                 });
             }
@@ -442,15 +443,15 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
             <div key={field.code} className={widthClass}>
                 <label className="block mb-2">
                     <span className="text-sm font-medium text-text-primary">
-                        {field.name_fa}
+                        {field.label_fa || field.name_fa || field.label_en || field.code}
                         {field.is_required && <span className="text-error-500 mr-1">*</span>}
                     </span>
                 </label>
 
                 {renderFieldInput(field, value, isReadOnly, error)}
 
-                {field.help_text_fa && (
-                    <p className="text-xs text-text-secondary mt-1">{field.help_text_fa}</p>
+                {field.help_text && (
+                    <p className="text-xs text-text-secondary mt-1">{field.help_text}</p>
                 )}
 
                 {error && (
@@ -527,7 +528,9 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
                     />
                 );
 
-            case 'SELECT':
+            case 'SELECT': {
+                const selectOptions = Array.isArray(field.options_json) ? field.options_json :
+                                     Array.isArray(field.options) ? field.options : [];
                 return (
                     <select
                         value={value}
@@ -536,15 +539,17 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
                         className={baseInputClass}
                     >
                         <option value="">انتخاب کنید...</option>
-                        {field.options.map(option => (
+                        {selectOptions.map(option => (
                             <option key={option.value} value={option.value}>
                                 {option.label_fa || option.label}
                             </option>
                         ))}
                     </select>
                 );
+            }
 
             case 'CHECKBOX':
+            case 'BOOLEAN':
                 return (
                     <div className="flex items-center gap-2">
                         <input
@@ -557,10 +562,12 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
                     </div>
                 );
 
-            case 'RADIO':
+            case 'RADIO': {
+                const radioOptions = Array.isArray(field.options_json) ? field.options_json :
+                                    Array.isArray(field.options) ? field.options : [];
                 return (
                     <div className="space-y-2">
-                        {field.options.map(option => (
+                        {radioOptions.map(option => (
                             <label key={option.value} className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="radio"
@@ -576,6 +583,7 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
                         ))}
                     </div>
                 );
+            }
 
             case 'FILE':
             case 'IMAGE':
@@ -648,6 +656,21 @@ const DynamicFormRenderer = ({ workflowId, formNumber, onSubmit, readOnly = fals
                             </div>
                         )}
                     </div>
+                );
+
+            case 'SIGNATURE':
+                return (
+                    <SignatureField
+                        workflowId={workflowId}
+                        formNumber={formNumber}
+                        fieldPath={field.code}
+                        signatureData={value || null}
+                        onSignatureApplied={(signatureData) => {
+                            handleFieldChange(field.code, signatureData);
+                        }}
+                        isEditable={!isReadOnly}
+                        label={field.name_fa}
+                    />
                 );
 
             default:

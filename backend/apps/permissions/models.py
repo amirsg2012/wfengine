@@ -1,9 +1,45 @@
 # apps/permissions/models.py
+"""
+LEGACY: This module contains the old multi-level permission system.
+It is being deprecated in favor of the simplified state-step based system.
+
+For new code, use:
+- models_simplified.py for the new permission models
+- utils_simplified.py for permission checking
+
+The old system will be kept temporarily for backwards compatibility.
+"""
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+# Import simplified models so they are accessible from this module
+from .models_simplified import (
+    WorkflowState,
+    WorkflowStateStep,
+    WorkflowStateStepPermission,
+    WorkflowStepCompletion,
+    StepPermissionOverride,
+)
+
+# Re-export for convenience
+__all__ = [
+    # New simplified models (preferred)
+    'WorkflowState',
+    'WorkflowStateStep',
+    'WorkflowStateStepPermission',
+    'WorkflowStepCompletion',
+    'StepPermissionOverride',
+    # Old models (deprecated)
+    'PermissionType',
+    'StatePermission',
+    'StateStepPermission',
+    'FormPermission',
+    'FormFieldPermission',
+    'PermissionOverride',
+]
 
 
 class PermissionType(models.TextChoices):
@@ -17,6 +53,8 @@ class PermissionType(models.TextChoices):
 
 class StatePermission(models.Model):
     """
+    DEPRECATED: Use WorkflowStateStepPermission instead.
+
     Permissions for workflow states.
     Defines who can view/edit/transition workflows in specific states.
     """
@@ -68,11 +106,44 @@ class StatePermission(models.Model):
 
 class StateStepPermission(models.Model):
     """
+    DEPRECATED: Use WorkflowStateStepPermission instead.
+
     Permissions for specific approval steps within states.
     Controls who can approve specific steps in multi-step approval processes.
+    For Form 3: Each step maps to a section and an action (fill or approve).
     """
     state = models.CharField(max_length=64, help_text="Workflow state name")
     step = models.IntegerField(help_text="Step index (0-based)")
+
+    # Form 3 specific: Section and action type
+    section = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text="Form section this step operates on (e.g., 'legalDeputyReport')"
+    )
+    action_type = models.CharField(
+        max_length=32,
+        null=True,
+        blank=True,
+        choices=[
+            ('FILL', 'Fill Section'),
+            ('APPROVE', 'Approve/Sign Section'),
+        ],
+        help_text="Type of action for this step"
+    )
+    signature_field = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text="Field path for signature if action is APPROVE"
+    )
+    description = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Persian description of step action"
+    )
 
     # Permission assigned to roles or specific users
     role = models.ForeignKey(
@@ -105,11 +176,15 @@ class StateStepPermission(models.Model):
 
     def __str__(self):
         target = self.role.code if self.role else (self.user.username if self.user else "None")
-        return f"{self.state} - Step {self.step} - {target}"
+        action = f" ({self.action_type})" if self.action_type else ""
+        section_info = f" - {self.section}" if self.section else ""
+        return f"{self.state} - Step {self.step}{action}{section_info} - {target}"
 
 
 class FormPermission(models.Model):
     """
+    DEPRECATED: Use WorkflowStateStepPermission instead.
+
     Permissions for workflow forms.
     Controls who can view/edit specific forms.
     """
@@ -165,6 +240,8 @@ class FormPermission(models.Model):
 
 class FormFieldPermission(models.Model):
     """
+    DEPRECATED: Use WorkflowStateStepPermission instead.
+
     Fine-grained permissions for specific form fields.
     Controls who can view/edit specific fields within forms.
     """
@@ -224,6 +301,8 @@ class FormFieldPermission(models.Model):
 
 class PermissionOverride(models.Model):
     """
+    DEPRECATED: Use SimplifiedPermissionOverride instead.
+
     Temporary permission overrides for specific workflows.
     Allows granting temporary access to specific users for specific workflows.
     """

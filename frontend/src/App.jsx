@@ -17,6 +17,7 @@ import WorkflowTemplateManagement from './pages/admin/WorkflowTemplateManagement
 import SystemLogs from './pages/admin/SystemLogs';
 import SystemSettings from './pages/admin/SystemSettings';
 import PermissionManagement from './pages/admin/PermissionManagement';
+import SimplifiedPermissionManagement from './pages/admin/SimplifiedPermissionManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { AuthProvider } from './api/useAuth';
@@ -79,7 +80,8 @@ function AppContent() {
             <Route path="/admin" element={<AdminRoute><AdminShell /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<UserManagement />} />
-                <Route path="permissions" element={<PermissionManagement />} />
+                <Route path="permissions" element={<SimplifiedPermissionManagement />} />
+                <Route path="permissions-legacy" element={<PermissionManagement />} />
                 <Route path="workflow-template" element={<WorkflowTemplateManagement />} />
                 <Route path="logs" element={<SystemLogs />} />
                 <Route path="settings" element={<SystemSettings />} />

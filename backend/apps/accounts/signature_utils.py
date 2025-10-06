@@ -50,24 +50,22 @@ def apply_signature_to_form(
     Returns:
         Dict with signature data and status
     """
-    # Check if user has signature
+    # Check if user has signature (auto-create if not exists)
     signature = get_user_signature(user)
 
     if not signature:
-        return {
-            "error": "no_signature",
-            "message": "User does not have a signature uploaded"
-        }
+        # Auto-create hash-based signature
+        signature = UserSignature.objects.create(
+            user=user,
+            is_active=True
+        )
 
     # Verify signature integrity
     if not signature.verify_integrity():
         return {
-            "error": "signature_corrupted",
-            "message": "Signature integrity verification failed"
+            "error": "signature_invalid",
+            "message": "Signature validation failed"
         }
-
-    # Get signature URL
-    signature_url = signature.signature_url
 
     # Create signature log entry
     log_data = {
@@ -75,7 +73,6 @@ def apply_signature_to_form(
         'workflow': workflow,
         'form_number': form_number,
         'field_path': field_path,
-        'signature_url': signature_url,
         'signature_hash': signature.signature_hash,
         'is_verified': True
     }
@@ -94,10 +91,14 @@ def apply_signature_to_form(
 
     SignatureLog.objects.create(**log_data)
 
+    # Get user's full name for display
+    user_display_name = f"{user.first_name} {user.last_name}".strip() or user.username
+
     return {
         "success": True,
-        "signature_url": signature_url,
         "signature_hash": signature.signature_hash,
+        "display_hash": signature.get_display_hash(),
+        "signed_by": user_display_name,
         "signed_at": signature.updated_at.isoformat()
     }
 

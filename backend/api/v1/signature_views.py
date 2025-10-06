@@ -28,20 +28,22 @@ class UserSignatureViewSet(viewsets.ViewSet):
 
     @decorators.action(detail=False, methods=['get'])
     def my_signature(self, request):
-        """Get current user's signature"""
+        """Get current user's signature (auto-creates hash-based signature if none exists)"""
         signature = get_user_signature(request.user)
 
         if not signature:
-            return Response({
-                'has_signature': False,
-                'message': 'No signature uploaded'
-            })
+            # Auto-create hash-based signature for user
+            signature = UserSignature.objects.create(
+                user=request.user,
+                is_active=True
+                # signature_hash will be auto-generated in model's save() method
+            )
 
         return Response({
             'has_signature': True,
-            'signature_url': signature.signature_url,
+            'signature_hash': signature.signature_hash,
+            'display_hash': signature.get_display_hash(),
             'uploaded_at': signature.uploaded_at.isoformat(),
-            'signature_hash': signature.signature_hash
         })
 
     @decorators.action(detail=False, methods=['post'])
